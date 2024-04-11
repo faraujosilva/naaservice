@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime
 from src.connector.interface import IConnector
 from src.device.device import Device
 from src.engine.parser import Parser
@@ -16,6 +17,7 @@ class RestConnector(IConnector):
 
 class ViptelaRestConnector(RestConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials):
+        print(f"Start time: {datetime.now()}")
         credentials = {
             "vmanage_ip": getenv("VMANAGE_IP"),
             "j_username": getenv("VMANAGE_USER"),
@@ -23,27 +25,25 @@ class ViptelaRestConnector(RestConnector):
         }
         self.session = {}
         try:
+            print(f"Time to login: {datetime.now()}")
             self.__login(credentials.get('vmanage_ip'), credentials.get("j_username"), credentials.get("j_password"))
         except Exception as e:
             return {
                 "error": str(e)
             }
-        endpoint = command_detail.command
-        headers = command_detail.headers if command_detail.headers is not None else {} #TOOD: Implement to use that
-        field = command_detail.field if command_detail.field is not None else "data[0]"
-        parse = command_detail.parse
-        group = command_detail.group
         
-        endpoint = placeholder_device_ip(endpoint, device.get_ip())
-        
+        endpoint = placeholder_device_ip(command_detail.command, device.get_ip())
+
+        print(f"Time to make request: {datetime.now()}")        
         req = self.__get_request(endpoint, credentials.get('vmanage_ip'))
         
         if req is not None:
             req = req.decode('utf-8')
             data = json.loads(req)
-            field_value = get_nested_value(data, field)
-            if parse and field_value:
-                field_value = parser.parse(field_value, parse, group)
+            field_value = get_nested_value(data, command_detail.field)
+            if command_detail.parse and field_value:
+                field_value = parser.parse(field_value, command_detail.parse, command_detail.group)
+            print(f"End time: {datetime.now()}")
             return {
                 "output": field_value
             }
@@ -63,6 +63,7 @@ class ViptelaRestConnector(RestConnector):
         #Url for posting login data
         login_url = base_url_str + login_action
         sess = requests.session()
+
         #If the vmanage has a certificate signed by a trusted authority change verify to True
         login_response = sess.post(url=login_url, data=login_data, verify=False)
 

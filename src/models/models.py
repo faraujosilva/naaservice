@@ -22,6 +22,7 @@ class SSHDriver(BaseModel):
     
 class APIDriver(BaseModel):
     rest: Optional[List[Command]] = None
+    restconf: Optional[List[Command]] = None
 
 class Drivers(BaseModel):
     order: Optional[List[str]] = None
