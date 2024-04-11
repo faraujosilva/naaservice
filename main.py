@@ -54,4 +54,4 @@ if __name__ == "__main__":
     app.config['mongosc'] = os.getenv("MONGO_SC")
     app.config['mongo_db'] = os.getenv("MONGO_DB")
     app.config['mongo_collection'] = os.getenv("MONGO_COLLECTION")
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5001)

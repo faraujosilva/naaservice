@@ -23,12 +23,14 @@ class Engine:
             'community': self.request_param.get('community', getenv('AUTOMATION_COMMUNITY'))
         }
         combined_output = []
+        last_driver_error = []
         
         driver_order = self.drivers.get_driver_order()
         for device in self.devices:
             success = False
             priority_driver = device.get_driver()
-            if priority_driver and priority_driver in driver_order:
+            print(f"Device {device.get_ip()} has priority driver {priority_driver}")
+            if priority_driver:
                 ordered_drivers = [priority_driver] + [d for d in driver_order if d != priority_driver]
             else:
                 ordered_drivers = driver_order
@@ -37,39 +39,60 @@ class Engine:
                 device.set_driver(driver_name)
                 if len(driver) > 0:
                     for connector_name in driver:
-                        print(f"Trying connector {connector_name} for {device.get_ip()}")
                         if success: break
                         if driver[connector_name] is None:
                             print(f"Driver {driver_name} has no commands for {connector_name}")
-                            break
+                            continue
                         count_os = sum(1 for entry in driver[connector_name] if entry.get('os') == device.get_os() and entry.get('type') == device.get_type())
+                        print(driver[connector_name])
                         for os_command in driver[connector_name]:
                             if device.get_os() == os_command.get('os'):
+                                print(f"Trying connector {connector_name} for {device.get_ip()}")
                                 output = {}
                                 output = self.drivers.run(device, Command(**os_command), self.parser, credentials, self.connector_factory.create_connector(connector_name))
                                 if output.get('error'):
                                     success = False
+                                    #This is to try to run all drivers/connector for device, but if all fails, it will return the last error
+                                    if len(last_driver_error) > 0:
+                                        #append
+                                        for entry in last_driver_error:
+                                            if entry['ip'] == device.get_ip():
+                                                entry['stderr'].append({os_command['command_name']: output.get('error'), 'status': 'error'})
+                                                success = False
+                                                break
+                                    else:
+                                        last_driver_error.append({
+                                            **device.to_dict(),
+                                            'stderr': [
+                                                {os_command['command_name']: output.get('error'), 'status': 'error'}
+                                            ],
+                                        })
+                                        success = False
+                                    combined_output.extend(last_driver_error)
                                     continue
                                 if count_os == 1:
                                     combined_output.append({
-                                        **device.__dict__,
-                                        os_command['command_name']: output.get('output')
+                                        **device.to_dict(),
+                                        'stdout': [
+                                            {os_command['command_name']: output.get('output'), 'status': 'success'},
+                                        ],
                                     })
                                     success = True
                                     break
                                 else:
                                     for entry in combined_output:
                                         if entry['ip'] == device.get_ip():
-                                            entry[os_command['command_name']] = output.get('output')
+                                            entry['stdout'].append({os_command['command_name']: output.get('output'), 'status': 'success'})
                                             success = True
                                             break
                                     else:
                                         combined_output.append({
                                             **device.to_dict(),
-                                            os_command['command_name']: output.get('output')
+                                            'stdout': [
+                                                {os_command['command_name']: output.get('output'), 'status': 'success'}
+                                            ],
                                         })
                                         success = True
-                else:
                     print(f"Driver {driver_name} is empty")
         return combined_output, 200
     

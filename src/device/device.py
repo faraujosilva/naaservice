@@ -2,34 +2,42 @@ from src.device.interface import IDevice
 
 class Device(IDevice):
     def __init__(self, name: str, ip: str, type:str, port:int, vendor: str, os: str, driver: str=None):
-        self.name = name
-        self.ip = ip
-        self.port = 22 if not port else port
-        self.type = type
-        self.vendor = vendor
-        self.os = os
-        self.driver = driver
+        self.__name = name
+        self.__ip = ip
+        self.__port = 22 if not port else port
+        self.__type = type
+        self.__vendor = vendor
+        self.__os = os
+        self.__driver = driver
     
     def get_driver(self):
-        return self.driver
+        return self.__driver
     
     def get_ip(self):
-        return self.ip
+        return self.__ip
     
     def get_os(self):
-        return self.os
+        return self.__os
     
     def get_type(self):
-        return self.type
+        return self.__type
     
     def get_vendor(self):
-        return self.vendor
+        return self.__vendor
     
     def get_port(self):
-        return self.port
+        return self.__port
     
     def to_dict(self):
-        return self.__dict__
+        return {
+            'name': self.__name,
+            'ip': self.__ip,
+            'port': self.__port,
+            'type': self.__type,
+            'vendor': self.__vendor,
+            'os': self.__os,
+            'driver': self.__driver
+        }
     
     def set_driver(self, driver):
-        self.driver = driver
+        self.__driver = driver

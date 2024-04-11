@@ -6,13 +6,13 @@ from src.engine.parser import Parser
 
 class SNMPConnector(IConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials: dict) -> dict:
-        print(f"Running SNMP driver for {device.ip} with command {command_detail.command}")
+        print(f"Running SNMP driver for {device.get_ip()} with command {command_detail.command}")
         try:
             # Create SNMP engine
             snmp_engine = SnmpEngine()
 
             # Define target
-            target = UdpTransportTarget((device.ip, 161))
+            target = UdpTransportTarget((device.get_ip(), 161))
 
             # Perform SNMP walk (using nextCmd for iteration)
             for (errorIndication, errorStatus, errorIndex, varBinds) in nextCmd(

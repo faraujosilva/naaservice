@@ -25,9 +25,8 @@
         "ssh": {
             "netmiko": [
                 {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "cpu_usage", "command": "show processes cpu | include CPU utilization", "parse": "five minutes: (.*)", "group": 1},
-                {"vendor": "cisco", "os": "ios", "type": "switch", "command_name": "interface", "command": "show ip int br", "parse": "(.*)", "group": 1},
-                {"vendor": "cisco", "os": "ios2", "type": "router", "command_name": "uptime", "command": "show version", "parse": "uptime is (.*)", "group": 1},
-                {"vendor": "hp", "os": "procurve", "type": "router", "command_name": "cpu_usage","command": "show cpu", "parse": "CPU utilization for five seconds: (.*)", "group": 1}
+                {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "uptime", "command": "show version", "parse": "uptime is (.*)", "group": 1},
+                {"vendor": "cisco", "os": "nxos", "type": "switch", "command_name": "cpu_usage", "command": "show system resources", "parse": "5 minutes:\\s*([0-9.]+)", "group": 1}
             ],
             "_comment": [
                 {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "cpu_usage", "command": "./playbooks/cpu_usage_ios.yml", "parse": "five minutes: (.*)", "group": 1},
@@ -47,6 +46,12 @@
             "golang": [
                 {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "cpu_usage", "command": "./snippets/cpu", "parse": "five minutes: (.*)", "group": 1}
             ]
-        }
+        },
+         "api": {
+            "rest": [
+                {"vendor": "cisco", "os": "viptela", "type": "sdwan", "command_name": "cpu_usage", "command": "device/system/status?deviceId={{device_ip}}", "headers": {"Content-Type": "application/json"}, "field": "data[0].cpu_user", "parse": "(.*)", "group": 1}
+            ]
+         }
+        
     }
 }

@@ -5,12 +5,14 @@ from enum import Enum
 class Command(BaseModel):
     vendor: str
     os: str
+    type: str
     command_name: str
     command: str
-    type: str
+    headers: Optional[Dict[str, str]] = None
+    field: Optional[str] = None
     parse: str
     group: int
-
+    
 class SNMPDriver(BaseModel):
     pysnmp: Optional[List[Command]] = None
 
@@ -19,12 +21,7 @@ class SSHDriver(BaseModel):
     ansible: Optional[List[Command]] = None
     
 class APIDriver(BaseModel):
-    vendor: str
-    os: str
-    uri: str
-    method: str
-    headers: Dict[str, str]
-    fields: str   
+    rest: Optional[List[Command]] = None
 
 class Drivers(BaseModel):
     order: Optional[List[str]] = None

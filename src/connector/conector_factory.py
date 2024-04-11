@@ -10,6 +10,9 @@ class ConnectorFactory:
         elif connector_name == 'pysnmp':
             from src.connector.snmp_connector import SNMPConnector
             return SNMPConnector()
+        elif connector_name == 'rest':
+            from src.connector.rest_connector import RestConnector
+            return RestConnector()
         else:
             raise Exception(f"Connector {connector_name} not found")
         

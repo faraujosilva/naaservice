@@ -11,28 +11,30 @@ GLOBAL_DRIVER_CACHING = {}
 
 class NetmikoConnector(IConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials: dict) -> dict:
-        print(f"Running Netmiko driver for {device.ip} with command {command_detail.command}")
+        print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
         net_device = {
             "device_type": 'autodetect', # or 'cisco_ios
-            "host": device.ip,
+            "host": device.get_ip(),
             "username": credentials.get('username'),
             "password": credentials.get('password'),
         }
         
-        if GLOBAL_DRIVER_CACHING.get(device.ip):
+        if GLOBAL_DRIVER_CACHING.get(device.get_ip()):
             print('Using cache')
-            net_device['device_type'] = GLOBAL_DRIVER_CACHING[device.ip]
+            net_device['device_type'] = GLOBAL_DRIVER_CACHING[device.get_ip()]
         else:
             if credentials.get('community'):
                 print('Discovering using SNMP')
                 try:
-                    snmp_detect = SNMPDetect(hostname=device.ip, snmp_version='v2c', community=credentials.get('community'))
+                    snmp_detect = SNMPDetect(hostname=device.get_ip(), snmp_version='v2c', community=credentials.get('community'))
                     best_match = snmp_detect.autodetect()
                     if best_match:
                         net_device["device_type"] = best_match
-                        GLOBAL_DRIVER_CACHING[device.ip] = best_match
+                        GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except Exception:
-                    pass
+                    return {
+                        "error": "Error in autodetecting device type"
+                    }
             else:
                 print('Discovering using SSH')
                 try:
@@ -41,7 +43,7 @@ class NetmikoConnector(IConnector):
                     
                     if best_match:
                         net_device["device_type"] = best_match
-                        GLOBAL_DRIVER_CACHING[device.ip] = best_match
+                        GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except NetMikoTimeoutException:
                     return {
                         "error": "Timeout in autodetecting device type"
