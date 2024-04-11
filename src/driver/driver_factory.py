@@ -1,5 +1,9 @@
 
 from src.models.models import Drivers, DriverOrder, SSHDriver, APIDriver, SNMPDriver
+from src.connector.interface import IConnector
+from src.device.interface import IDevice
+from src.engine.parser import Parser
+from src.models.models import Command
 from src.driver.interface import IDriver
 from typing import Union
 
@@ -32,3 +36,6 @@ class DriverFactory(IDriver):
         if not self.drivers.order:
             order.sort(key=lambda x: DriverOrder[x].value)
         return order
+    
+    def run(self, device: IDevice, commands: Command, parser: Parser, credentials: dict, connector: IConnector):
+        return connector.run(device, commands, parser, credentials)

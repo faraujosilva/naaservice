@@ -10,3 +10,7 @@ class IDriver(ABC):
     @abstractmethod
     def get_driver_order(self) -> list:
         pass
+    
+    @abstractmethod
+    def run(self, device, commands, parser, credentials, connector, connector_name):
+        pass

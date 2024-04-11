@@ -3,16 +3,16 @@ from src.driver.interface import IDriver
 from src.device.interface import IDevice
 from src.models.models import Command
 from src.engine.parser import Parser
-from src.connector.interface import IConnector
+from src.connector.conector_factory import ConnectorFactory
 from src.database.interface import IDatabase
 from os import getenv
 
 class Engine:
-    def __init__(self, request_param: dict, db: IDatabase, drivers: IDriver, devices: List[IDevice], connector: IConnector, parser: Parser):
+    def __init__(self, request_param: dict, db: IDatabase, drivers: IDriver, devices: List[IDevice], connector_factory: ConnectorFactory, parser: Parser):
         self.request_param = request_param
         self.drivers = drivers
         self.devices = devices
-        self.connector = connector
+        self.connector_factory = connector_factory
         self.parser = parser
         self.db = db
     
@@ -46,8 +46,7 @@ class Engine:
                         for os_command in driver[connector_name]:
                             if device.get_os() == os_command.get('os'):
                                 output = {}
-                                connector = self.connector.create_connector(connector_name)
-                                output = connector.run(device, Command(**os_command), self.parser, credentials)
+                                output = self.drivers.run(device, Command(**os_command), self.parser, credentials, self.connector_factory.create_connector(connector_name))
                                 if output.get('error'):
                                     success = False
                                     continue
