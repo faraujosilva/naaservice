@@ -32,7 +32,7 @@ def create_endpoints(app):
                                         return jsonify({"error": f"Parameter {parameter} is required"}), 400
                                 try:
                                     driver = DriverFactory(Drivers(**data['drivers']))
-                                    db = MongoDB("teste", "123", app.config['mongosc'])
+                                    db = MongoDB(app.config['mongo_db'], app.config['mongo_collection'], app.config['mongosc'])
                                     device_factory = DeviceFactory()
                                     device = device_factory.create_device(request.args.get('device_ip'), db)
                                     connector = ConnectorFactory()
@@ -52,4 +52,6 @@ if __name__ == "__main__":
     logger = logging.getLogger('werkzeug')
     app.config['logger'] = logger  
     app.config['mongosc'] = os.getenv("MONGO_SC")
+    app.config['mongo_db'] = os.getenv("MONGO_DB")
+    app.config['mongo_collection'] = os.getenv("MONGO_COLLECTION")
     app.run(debug=True, host='0.0.0.0', port=5001)
