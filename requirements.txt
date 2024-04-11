@@ -1,0 +1,6 @@
+pydantic
+flask
+pymongo
+python-dotenv
+pysnmp
+netmiko
