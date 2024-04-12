@@ -2,7 +2,7 @@ import logging
 from flask import Flask, Blueprint
 from os import getenv
 from dotenv import load_dotenv
-from src.setup_routes import load_endpoints
+from src.setup_app import load_endpoints
 
 dynamic_endpoints = Blueprint('dynamic_endpoints', __name__)
 

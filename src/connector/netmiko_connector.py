@@ -12,6 +12,10 @@ GLOBAL_DRIVER_CACHING = {}
 
 class NetmikoConnector(IConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials: dict) -> dict:
+        if not credentials.get('username') or not credentials.get('password'):
+            return {
+                "error": "Username and password are required"
+            }
         print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
         net_device = {
             "device_type": 'autodetect', # or 'cisco_ios

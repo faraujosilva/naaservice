@@ -17,15 +17,19 @@ class RestConnector(IConnector):
 
 class ViptelaRestConnector(RestConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials):
-        print(f"Start time: {datetime.now()}")
+        if not credentials.get('vmanage_ip') or not credentials.get('j_username') or not credentials.get('j_password'):
+            return {
+                "error": "VMANAGE_IP, VMANAGE_USER and VMANAGE_PASS are required"
+            }
+        print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
         credentials = {
             "vmanage_ip": getenv("VMANAGE_IP"),
             "j_username": getenv("VMANAGE_USER"),
             "j_password": getenv('VMANAGE_PASS')
         }
+
         self.session = {}
         try:
-            print(f"Time to login: {datetime.now()}")
             self.__login(credentials.get('vmanage_ip'), credentials.get("j_username"), credentials.get("j_password"))
         except Exception as e:
             return {
@@ -34,7 +38,6 @@ class ViptelaRestConnector(RestConnector):
         
         endpoint = placeholder_device_ip(command_detail.command, device.get_ip())
 
-        print(f"Time to make request: {datetime.now()}")        
         req = self.__get_request(endpoint, credentials.get('vmanage_ip'))
         
         if req is not None:
@@ -43,7 +46,6 @@ class ViptelaRestConnector(RestConnector):
             field_value = get_nested_value(data, command_detail.field)
             if command_detail.parse and field_value:
                 field_value = parser.parse(field_value, command_detail.parse, command_detail.group)
-            print(f"End time: {datetime.now()}")
             return {
                 "output": field_value
             }

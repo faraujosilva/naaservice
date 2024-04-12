@@ -6,6 +6,10 @@ from src.engine.parser import Parser
 
 class SNMPConnector(IConnector):
     def run(self, device: Device, command_detail: Command, parser: Parser, credentials: dict) -> dict:
+        if not credentials.get('community'):
+            return {
+                "error": "Community is required"
+            }
         print(f"Running SNMP driver for {device.get_ip()} with command {command_detail.command}")
         try:
             # Create SNMP engine
