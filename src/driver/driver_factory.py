@@ -2,15 +2,20 @@
 from src.models.models import Drivers, DriverOrder, SSHDriver, APIDriver, SNMPDriver
 from src.connector.interface import IConnector
 from src.device.interface import IDevice
-from src.engine.parser import Parser
 from src.models.models import Command
 from src.driver.interface import IDriver
-from typing import Union
+from typing import Union, List
 
 class DriverFactory(IDriver):
 
     def __init__(self, drivers: Drivers):
         self.drivers = drivers
+        self.avaliable_drivers = {
+            DriverOrder.ssh.name: SSHDriver,
+            DriverOrder.api.name: APIDriver,
+            DriverOrder.snmp.name: SNMPDriver
+        }
+        self.commands: Command = None
         
     def get_driver(self, device_driver: str = None) -> Union[SSHDriver, APIDriver, SNMPDriver]:
         order = self.drivers.order if self.drivers.order is not None else [driver.name for driver in DriverOrder]
@@ -24,12 +29,9 @@ class DriverFactory(IDriver):
             if self.drivers.model_dump().get(driver_name) is None:
                 continue
             driver = self.drivers.model_dump().get(driver_name)
-            if driver_name == DriverOrder.ssh.name:
-                return SSHDriver(**driver)
-            elif driver_name == DriverOrder.api.name:
-                return APIDriver(**driver)
-            elif driver_name == DriverOrder.snmp.name:
-                return SNMPDriver(**driver)
+            if driver is not None:
+                return self.avaliable_drivers[driver_name].parse_obj(driver)
+        return None
             
     def get_driver_order(self) -> list:
         order = self.drivers.order if self.drivers.order is not None else [driver.name for driver in DriverOrder]
@@ -37,5 +39,18 @@ class DriverFactory(IDriver):
             order.sort(key=lambda x: DriverOrder[x].value)
         return order
     
-    def run(self, device: IDevice, commands: Command, parser: Parser, credentials: dict, connector: IConnector):
-        return connector.run(device, commands, parser, credentials)
+    def get_commands(self, device: IDevice, connector_name: str) -> List[Command]:
+        driver = device.get_driver()
+        drivers_dump = self.drivers.model_dump()
+        commands = []
+        for command in drivers_dump.get(driver).get(connector_name):
+            if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os():
+                commands.append(Command(**command))
+        return commands
+    
+    def update_commands(self, commands: List[Command]):
+        self.commands = commands
+    
+    def run(self, device: IDevice, credentials: dict, connector: IConnector):
+        return connector.run(device, self.commands, credentials)
+    

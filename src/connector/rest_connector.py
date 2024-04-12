@@ -1,22 +1,20 @@
 import requests
 import json
-from datetime import datetime
 from src.connector.interface import IConnector
 from src.device.device import Device
-from src.engine.parser import Parser
-from src.connector.utils import placeholder_device_ip, get_nested_value
+from src.utils.utils import placeholder_device_ip, get_nested_value
 from  src.models.models import Command
 from os import getenv
 
 class RestConnector(IConnector):
-    def run(self, device: Device, command_detail: Command, parser: Parser, credentials):
+    def run(self, device: Device, command_detail: Command, credentials):
         if device.get_os() in CLASS_REST_MAPPING:
-            return CLASS_REST_MAPPING[device.get_os()]().run(device, command_detail, parser, credentials)
+            return CLASS_REST_MAPPING[device.get_os()]().run(device, command_detail, credentials)
         else:
             return None #TODO: Implement default HTTP request here, this is not particular for vendor or something
 
 class ViptelaRestConnector(RestConnector):
-    def run(self, device: Device, command_detail: Command, parser: Parser, credentials):
+    def run(self, device: Device, command_detail: Command, credentials):
         if not credentials.get('vmanage_ip') or not credentials.get('j_username') or not credentials.get('j_password'):
             return {
                 "error": "VMANAGE_IP, VMANAGE_USER and VMANAGE_PASS are required"
@@ -44,8 +42,6 @@ class ViptelaRestConnector(RestConnector):
             req = req.decode('utf-8')
             data = json.loads(req)
             field_value = get_nested_value(data, command_detail.field)
-            if command_detail.parse and field_value:
-                field_value = parser.parse(field_value, command_detail.parse, command_detail.group)
             return {
                 "output": field_value
             }
@@ -87,7 +83,7 @@ class ViptelaRestConnector(RestConnector):
         return data
 
 class AciRestConnector(RestConnector):
-    def run(self, device, command_detail, parser, credentials):
+    def run(self, device, command_detail, credentials):
         pass
 
 CLASS_REST_MAPPING = {

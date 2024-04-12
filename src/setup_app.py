@@ -4,7 +4,7 @@ from flask import  request, jsonify, current_app as app
 
 from src.engine.engine import Engine
 from src.database.mongodb import MongoDB
-from src.models.models import Drivers
+from src.models.models import Drivers, RequestParam
 from src.engine.parser import Parser
 from src.connector.conector_factory import ConnectorFactory
 from src.device.device_factory import DeviceFactory
@@ -25,7 +25,8 @@ def create_endpoint(blueprint, endpoint, method, data, file_name):
             device_factory = DeviceFactory()
             device = device_factory.create_device(request.args.get('device_ip'), db)
             connector = ConnectorFactory()
-            engine = Engine(request.args, db, driver, device, connector, Parser())
+            engine = Engine()
+            engine = engine.create(RequestParam(**request.args), db, driver, device, connector, Parser())
             print(f"Engine loaded with {len(device)} devices")
             resp, code = engine.run()
             return jsonify(resp), code
@@ -44,19 +45,3 @@ def load_endpoints(blueprint, directory):
                         endpoint = data['endpoint']['name']
                         method = data['endpoint']['method']
                         create_endpoint(blueprint, endpoint, method, data, file.replace('.json', ''))
-
-def load_cli_endpoints(directory, definitions) -> Engine:
-    for file in os.listdir(directory):
-        if file.endswith(".json"):
-            file_path = os.path.join(directory, file)
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                if data.get('cli'):
-                    if data['cli'].get('enabled', False):
-                        driver = DriverFactory(Drivers(**data['drivers']))
-                        db = MongoDB(app.config['mongo_db'], app.config['mongo_collection'], app.config['mongosc'])
-                        device_factory = DeviceFactory()
-                        device = device_factory.create_device(request.args.get('device_ip'), db)
-                        connector = ConnectorFactory()
-                        engine = Engine(request.args, db, driver, device, connector, Parser())
-    return engine

@@ -2,20 +2,17 @@ from netmiko import ConnectHandler
 from netmiko.snmp_autodetect import SNMPDetect
 from netmiko.ssh_autodetect import SSHDetect
 from netmiko.exceptions import NetMikoTimeoutException, NetMikoAuthenticationException, NetMikoTimeoutException
-from src.engine.parser import Parser
 from src.device.device import Device
 from src.connector.interface import IConnector
-from src.models.models import Command
-from src.connector.utils import netmiko_commandError
+from src.models.models import Command, ConnectorOutput
+from src.utils.utils import netmiko_commandError
 
 GLOBAL_DRIVER_CACHING = {}
 
 class NetmikoConnector(IConnector):
-    def run(self, device: Device, command_detail: Command, parser: Parser, credentials: dict) -> dict:
+    def run(self, device: Device, command_detail: Command, credentials: dict) -> ConnectorOutput:
         if not credentials.get('username') or not credentials.get('password'):
-            return {
-                "error": "Username and password are required"
-            }
+            return ConnectorOutput(error="Username and password are required")
         print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
         net_device = {
             "device_type": 'autodetect', # or 'cisco_ios
@@ -37,11 +34,8 @@ class NetmikoConnector(IConnector):
                         net_device["device_type"] = best_match
                         GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except Exception:
-                    return {
-                        "error": "Error in autodetecting device type"
-                    }
+                    return ConnectorOutput(error="Error in autodetecting device type using SNMP")
             else:
-                print('Discovering using SSH')
                 try:
                     ssh_Detect = SSHDetect(**net_device)
                     best_match = ssh_Detect.autodetect()
@@ -50,39 +44,24 @@ class NetmikoConnector(IConnector):
                         net_device["device_type"] = best_match
                         GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except NetMikoTimeoutException:
-                    return {
-                        "error": "Timeout in autodetecting device type"
-                    }
+                    return ConnectorOutput(error="Timeout in autodetecting device type")
                 except NetMikoAuthenticationException:
-                    return {
-                        "error": "Authentication error in autodetecting device type"
-                    }
-                except Exception:
-                    return {
-                        "error": "General error in autodetecting device type"
-                    }
+                    return ConnectorOutput(error="Authentication error in autodetecting device type")
+                except Exception: 
+                    return ConnectorOutput(error="General error in autodetecting device type")
         try:
             with ConnectHandler(**net_device) as net_connect:
                 output = net_connect.send_command(command_detail.command).strip()
                 if netmiko_commandError(output):
-                    return {
-                        "error": f"Command: {command_detail.command} ran with error: {output}"
-                    }
-                
+                    return ConnectorOutput(error=f"Command: {command_detail.command} ran with error: {output}")
+
         except NetMikoTimeoutException:
-            return {
-                "error": "Timeout in connecting to device"
-            }
+            return ConnectorOutput(error="Timeout in connecting to device")
+
         except NetMikoAuthenticationException:
-            return {
-                "error": "Authentication error in connecting to device"
-            }
+            return ConnectorOutput(error="Authentication error in connecting to device")
+
         except Exception:
-            return {
-                "error": "General error in connecting to device"
-            }
-                
-        return {
-            "output": parser.parse(output, command_detail.parse, command_detail.group)
-        }
-    
+            return ConnectorOutput(error="General error in connecting to device")
+
+        return ConnectorOutput(output=output)    

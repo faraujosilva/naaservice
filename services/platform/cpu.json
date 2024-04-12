@@ -1,4 +1,5 @@
 {
+    "service_name": "cpu_usage",
     "endpoint": {
         "name": "/cpu_usage",
         "method": "GET",
