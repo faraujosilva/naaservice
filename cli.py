@@ -95,4 +95,4 @@ if __name__ == "__main__":
     req_param = RequestParam(device_ip=args.device_ip, output=args.output, output_filter=args.output_filter)
     cli = CLI(req_param, device_factory, db, driver, connector, Parser())
     
-    print(cli.run())
+    print(cli.run()[0])

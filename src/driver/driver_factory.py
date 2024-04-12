@@ -43,9 +43,13 @@ class DriverFactory(IDriver):
         driver = device.get_driver()
         drivers_dump = self.drivers.model_dump()
         commands = []
+        #TODO Checa se tem os comandos para o driver prioritario validando o porque nao deu match, vendor, os, etc
+        #TODO Se nao tiver, percorre os outros drivers
+        #TODO Se nao tiver, retorna erro
         for command in drivers_dump.get(driver).get(connector_name):
             if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os() and command.get('type') == device.get_type():
                 commands.append(Command(**command))
+
         return commands
     
     def update_commands(self, commands: List[Command]):

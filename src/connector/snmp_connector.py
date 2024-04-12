@@ -1,10 +1,10 @@
 from pysnmp.hlapi import *
 from src.connector.interface import IConnector
-from src.device.device import Device
+from src.device.interface import IDevice
 from src.models.models import Command, ConnectorOutput
 
 class SNMPConnector(IConnector):
-    def run(self, device: Device, command_detail: Command, credentials: dict) -> ConnectorOutput:
+    def run(self, device: IDevice, command_detail: Command, credentials: dict) -> ConnectorOutput:
         if not credentials.get('community'):
             return ConnectorOutput(error="Community string is required for SNMP")
         #print(f"Running SNMP driver for {device.get_ip()} with command {command_detail.command}")
@@ -18,15 +18,17 @@ class SNMPConnector(IConnector):
             ):
 
                 if errorIndication:
-                    #print(f"Error: {errorIndication}")
+                    print(f"Error: {errorIndication}")
                     return ConnectorOutput(error=errorIndication)
 
                 elif errorStatus:
-                    #print(f"Error at {errorIndex}: {errorStatus}")
+                    print(f"Error at {errorIndex}: {errorStatus}")
                     return ConnectorOutput(error=errorStatus)
                 else:
                     for name, val in varBinds:
                         poutput = f"{name} = {val.prettyPrint()}"
+                        print(poutput)
+                        print(device.get_ip())
                         return ConnectorOutput(output=poutput)
 
         except Exception as e:

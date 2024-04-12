@@ -1,6 +1,6 @@
 from src.device.interface import IDevice
 
-class Device(IDevice):
+class BaseDevice(IDevice):
     def __init__(self, name: str, ip: str, type:str, port:int, vendor: str, os: str, driver: str=None):
         self.__name = name
         self.__ip = ip
@@ -37,7 +37,6 @@ class Device(IDevice):
             'vendor': self.__vendor,
             'os': self.__os,
             'driver': self.__driver
-        }
-    
+        } 
     def set_driver(self, driver):
         self.__driver = driver

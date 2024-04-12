@@ -2,7 +2,7 @@ from netmiko import ConnectHandler
 from netmiko.snmp_autodetect import SNMPDetect
 from netmiko.ssh_autodetect import SSHDetect
 from netmiko.exceptions import NetMikoTimeoutException, NetMikoAuthenticationException, NetMikoTimeoutException
-from src.device.device import Device
+from src.device.interface import IDevice
 from src.connector.interface import IConnector
 from src.models.models import Command, ConnectorOutput
 from src.utils.utils import netmiko_commandError
@@ -10,10 +10,9 @@ from src.utils.utils import netmiko_commandError
 GLOBAL_DRIVER_CACHING = {}
 
 class NetmikoConnector(IConnector):
-    def run(self, device: Device, command_detail: Command, credentials: dict) -> ConnectorOutput:
+    def run(self, device: IDevice, command_detail: Command, credentials: dict) -> ConnectorOutput:
         if not credentials.get('username') or not credentials.get('password'):
             return ConnectorOutput(error="Username and password are required")
-        #print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
         net_device = {
             "device_type": 'autodetect', # or 'cisco_ios
             "host": device.get_ip(),

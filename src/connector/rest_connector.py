@@ -2,19 +2,19 @@ import requests
 import json
 from src.connector.interface import IConnector
 from os import getenv
-from src.device.device import Device
+from src.device.interface import IDevice
 from src.utils.utils import placeholder_device_ip, get_nested_value
 from  src.models.models import Command, ConnectorOutput
 
 class RestConnector(IConnector):
-    def run(self, device: Device, command_detail: Command, credentials):
+    def run(self, device: IDevice, command_detail: Command, credentials):
         if device.get_os() in CLASS_REST_MAPPING:
             return CLASS_REST_MAPPING[device.get_os()]().run(device, command_detail, credentials)
         else:
             return None #TODO: Implement default HTTP request here, this is not particular for vendor or something
 
 class ViptelaRestConnector(RestConnector):
-    def run(self, device: Device, command_detail: Command, credentials):
+    def run(self, device: IDevice, command_detail: Command, credentials):
         #print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
         credentials = {
             "vmanage_ip": getenv("VMANAGE_IP", credentials.get('vmanage_ip')),
@@ -74,7 +74,7 @@ class ViptelaRestConnector(RestConnector):
         return data
 
 class AciRestConnector(RestConnector):
-    def run(self, device, command_detail, credentials):
+    def run(self, device: IDevice, command_detail: Command, credentials: dict):
         pass
 
 CLASS_REST_MAPPING = {
