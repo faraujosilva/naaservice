@@ -1,10 +1,10 @@
 import requests
 import json
 from src.connector.interface import IConnector
+from os import getenv
 from src.device.device import Device
 from src.utils.utils import placeholder_device_ip, get_nested_value
-from  src.models.models import Command
-from os import getenv
+from  src.models.models import Command, ConnectorOutput
 
 class RestConnector(IConnector):
     def run(self, device: Device, command_detail: Command, credentials):
@@ -15,25 +15,20 @@ class RestConnector(IConnector):
 
 class ViptelaRestConnector(RestConnector):
     def run(self, device: Device, command_detail: Command, credentials):
-        if not credentials.get('vmanage_ip') or not credentials.get('j_username') or not credentials.get('j_password'):
-            return {
-                "error": "VMANAGE_IP, VMANAGE_USER and VMANAGE_PASS are required"
-            }
-        print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
+        #print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
         credentials = {
-            "vmanage_ip": getenv("VMANAGE_IP"),
-            "j_username": getenv("VMANAGE_USER"),
-            "j_password": getenv('VMANAGE_PASS')
+            "vmanage_ip": getenv("VMANAGE_IP", credentials.get('vmanage_ip')),
+            "j_username": getenv("VMANAGE_USER", credentials.get('j_username')),
+            "j_password": getenv('VMANAGE_PASS', credentials.get('j_password'))
         }
+        if not credentials.get('vmanage_ip') or not credentials.get('j_username') or not credentials.get('j_password'):
+            return ConnectorOutput(error="VMANAGE_IP, VMANAGE_USER and VMANAGE_PASS are required")
 
         self.session = {}
         try:
             self.__login(credentials.get('vmanage_ip'), credentials.get("j_username"), credentials.get("j_password"))
         except Exception as e:
-            return {
-                "error": str(e)
-            }
-        
+            return ConnectorOutput(error=str(e))
         endpoint = placeholder_device_ip(command_detail.command, device.get_ip())
 
         req = self.__get_request(endpoint, credentials.get('vmanage_ip'))
@@ -42,12 +37,8 @@ class ViptelaRestConnector(RestConnector):
             req = req.decode('utf-8')
             data = json.loads(req)
             field_value = get_nested_value(data, command_detail.field)
-            return {
-                "output": field_value
-            }
-        return {
-            "error": "No data found"
-        }
+            return ConnectorOutput(output=field_value)
+        return ConnectorOutput(error="No data found")
 
     def __login(self, vmanage_ip, username, password):
         """Login to vmanage"""
@@ -67,7 +58,7 @@ class ViptelaRestConnector(RestConnector):
 
 
         if b'<html>' in login_response.content:
-            print ("Login Failed")
+            #print ("Login Failed")
             sess.close()
             raise Exception("Login Failed at vitptela")
 
@@ -76,7 +67,7 @@ class ViptelaRestConnector(RestConnector):
     def __get_request(self, mount_point,vmanage_ip):
         """GET request"""
         url = "https://%s/dataservice/%s"%(vmanage_ip, mount_point)
-        #print url
+        ##print url
         response = self.session[vmanage_ip].get(url, verify=False)
         data = response.content
         self.session[vmanage_ip].close()

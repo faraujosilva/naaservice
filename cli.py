@@ -24,28 +24,38 @@ def load_cli_endpoint(directory, service_name):
                         with open(file_path, 'r') as f:
                             service = json.load(f)
                         if service.get('service_name') == service_name:
-                            return service
+                            if service.get('cli'):
+                                if service.get('cli').get('enabled'):
+                                    return service
     return None
 
 class CLI(Engine):
     def __init__(self, request_param: RequestParam, device_factory: DeviceFactory, db: MongoDB, driver: DriverFactory, connector: ConnectorFactory, parser: Parser):
+        super().__init__()
         self.request_param = request_param
         self.device_factory = device_factory
-        self._devices = []
         self.db = db
         self.driver = driver
         self.connector = connector
         self.parser = parser
-        
         self.__load_engine()
-        
+
     def __load_engine(self):
+        devices = []
         if isinstance(self.request_param.device_ip, list):
             for device_ip in self.request_param.device_ip:
-                self._devices = self.device_factory.create_device(device_ip, self.db)
+                device = self.device_factory.create_device(device_ip, self.db)
+                devices.extend(device)
         else:
-            self._devices = self.device_factory.create_device(self.request_param.device_ip, self.db)
-        self.create(self.request_param, self.db, self.driver, self._devices, self.connector, self.parser)
+            device = self.device_factory.create_device(self.request_param.device_ip, self.db)
+            devices.extend(device)
+        self.devices = devices
+        self.db = self.db
+        self.drivers = self.driver
+        self.devices = self.devices
+        self.connector_factory = self.connector
+        self.parser = self.parser    
+        self.create(self.request_param, self.db, self.drivers, self.devices, self.connector_factory, self.parser)
     
             
         
@@ -82,6 +92,7 @@ if __name__ == "__main__":
 
     driver = DriverFactory(Drivers(**service['drivers']))
     connector = ConnectorFactory()
-    cli = CLI(RequestParam(**args.__dict__), device_factory, db, driver, connector, Parser())
+    req_param = RequestParam(device_ip=args.device_ip, output=args.output, output_filter=args.output_filter)
+    cli = CLI(req_param, device_factory, db, driver, connector, Parser())
     
     print(cli.run())

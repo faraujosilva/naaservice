@@ -13,13 +13,8 @@ class OutputParser:
 class JsonParser(OutputParser):
     def format(self, data, output_filter=''):
         formatted_data = {}
-        if output_filter:
-            if ',' in output_filter or ', ' in output_filter or ' ,' in output_filter:
-                output_filter = output_filter.split(',')
-                for filter in output_filter:
-                    print('Filter:', filter)
-                return formatted_data
-            jsonpath_expr = get_nested_value(data, output_filter) #cpu_usage
+        if output_filter: pass
+            #formatted_data = get_nested_value(data, output_filter)
         return data
 
 class PrettyParser(OutputParser):

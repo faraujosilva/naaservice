@@ -13,7 +13,7 @@ class NetmikoConnector(IConnector):
     def run(self, device: Device, command_detail: Command, credentials: dict) -> ConnectorOutput:
         if not credentials.get('username') or not credentials.get('password'):
             return ConnectorOutput(error="Username and password are required")
-        print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
+        #print(f"Running Netmiko driver for {device.get_ip()} with command {command_detail.command}")
         net_device = {
             "device_type": 'autodetect', # or 'cisco_ios
             "host": device.get_ip(),
@@ -22,11 +22,11 @@ class NetmikoConnector(IConnector):
         }
         
         if GLOBAL_DRIVER_CACHING.get(device.get_ip()):
-            print('Using cache')
+            #print('Using cache')
             net_device['device_type'] = GLOBAL_DRIVER_CACHING[device.get_ip()]
         else:
             if credentials.get('community'):
-                print('Discovering using SNMP')
+                #print('Discovering using SNMP')
                 try:
                     snmp_detect = SNMPDetect(hostname=device.get_ip(), snmp_version='v2c', community=credentials.get('community'))
                     best_match = snmp_detect.autodetect()

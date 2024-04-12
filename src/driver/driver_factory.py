@@ -44,7 +44,7 @@ class DriverFactory(IDriver):
         drivers_dump = self.drivers.model_dump()
         commands = []
         for command in drivers_dump.get(driver).get(connector_name):
-            if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os():
+            if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os() and command.get('type') == device.get_type():
                 commands.append(Command(**command))
         return commands
     
