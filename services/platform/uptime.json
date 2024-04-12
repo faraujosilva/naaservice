@@ -27,8 +27,8 @@
         "order": ["snmp", "ssh"],
         "ssh": {
             "netmiko": [
-                {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "uptime", "command": "show uptime", "parse": "uptime is (.*)", "group": 1},
-                {"vendor": "cisco", "os": "nxos", "type": "switch", "command_name": "uptime", "command": "show uptime", "parse": "uptime is (.*)", "group": 1}
+                {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "uptime", "command": "show version", "parse": "uptime is (.*)", "group": 1},
+                {"vendor": "cisco", "os": "nxos", "type": "switch", "command_name": "uptime", "command": "show version", "parse": "uptime is (.*)", "group": 1}
             ]
         }
         
