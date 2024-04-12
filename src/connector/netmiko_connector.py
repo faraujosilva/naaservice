@@ -6,6 +6,7 @@ from src.engine.parser import Parser
 from src.device.device import Device
 from src.connector.interface import IConnector
 from src.models.models import Command
+from src.connector.utils import netmiko_commandError
 
 GLOBAL_DRIVER_CACHING = {}
 
@@ -58,7 +59,12 @@ class NetmikoConnector(IConnector):
                     }
         try:
             with ConnectHandler(**net_device) as net_connect:
-                output = net_connect.send_command(command_detail.command)
+                output = net_connect.send_command(command_detail.command).strip()
+                if netmiko_commandError(output):
+                    return {
+                        "error": f"Command: {command_detail.command} ran with error: {output}"
+                    }
+                
         except NetMikoTimeoutException:
             return {
                 "error": "Timeout in connecting to device"

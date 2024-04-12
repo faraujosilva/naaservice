@@ -20,3 +20,14 @@ def get_nested_value(data_to_search: str, keys: list):
             key = int(key)
         value = value[key]
     return value
+
+
+def netmiko_commandError(output: str) -> bool:
+    """Check if the output is a netmiko error"""
+    if 'Traceback' in output:
+        return True
+    if "^\n% Invalid input detected at '^' marker.\n":
+        return True
+    if 'Invalid input detected' in output:
+        return True
+    return False
