@@ -1,0 +1,36 @@
+{
+    "endpoint": {
+        "name": "/uptime",
+        "method": "GET",
+        "parameters": {
+            "device_ip": {
+                "required": false,
+                "type": "string",
+                "description": "IP address of the device"
+            },
+            "device_name": {
+                "required": false,
+                "type": "string",
+                "description": "Name of the device"
+            },
+            "driver": {
+                "required": false,
+                "type": "string",
+                "description": "Driver to be used to get the CPU usage"
+            }
+        }
+    },
+    "cli": {
+        "enabled": true
+    },
+    "drivers": {
+        "order": ["snmp", "ssh"],
+        "ssh": {
+            "netmiko": [
+                {"vendor": "cisco", "os": "ios", "type": "router", "command_name": "uptime", "command": "show uptime", "parse": "uptime is (.*)", "group": 1},
+                {"vendor": "cisco", "os": "nxos", "type": "switch", "command_name": "uptime", "command": "show uptime", "parse": "uptime is (.*)", "group": 1}
+            ]
+        }
+        
+    }
+}

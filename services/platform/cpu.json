@@ -20,6 +20,9 @@
             }
         }
     },
+    "cli": {
+        "enabled": true
+    },
     "drivers": {
         "order": ["snmp", "ssh"],
         "ssh": {

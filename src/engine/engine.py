@@ -34,8 +34,13 @@ class Engine:
                 ordered_drivers = [priority_driver] + [d for d in driver_order if d != priority_driver]
             else:
                 ordered_drivers = driver_order
+            print(f"Ordered drivers: {ordered_drivers}")
             for driver_name in ordered_drivers:
-                driver = self.drivers.get_driver(driver_name).model_dump()
+                driver = self.drivers.get_driver(driver_name)
+                if not driver:
+                    continue
+                print(f"Driver {driver_name} loaded")
+                driver = driver.model_dump()
                 device.set_driver(driver_name)
                 if len(driver) > 0:
                     for connector_name in driver:
@@ -93,6 +98,7 @@ class Engine:
                                             ],
                                         })
                                         success = True
+                else:
                     print(f"Driver {driver_name} is empty")
         return combined_output, 200
     
