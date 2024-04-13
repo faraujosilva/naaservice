@@ -4,7 +4,7 @@ Exemplos
    * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
    - Cenário
-![Cenario](docs/imgs/elements.png)
+![Cenario](imgs/elements.png)
    
 * Estrutura Banco (NOSQL)
 
