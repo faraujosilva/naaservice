@@ -8,7 +8,7 @@ Exemplos
    
 * Estrutura Banco (NOSQL)
 
-![BD](../db_struct.png)
+![BD](../imgs/db_struct.png)
 
 * Definição do serviço
    ```json
@@ -162,10 +162,10 @@ Exemplos
    ```
 * Requisição com filtro
 
-![REQ3](../req3_filter.png)
+![REQ3](../imgs/req3_filter.png)
 
 
 * Requisição sem filtro
 
-![REQ1](../req1.png)
-![REQ2](../req2.png)
+![REQ1](../imgs/req1.png)
+![REQ2](../imgs/req2.png)

@@ -4,11 +4,11 @@ Exemplos
    * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
    - Cenário
-![Cenario](../elements.png)
+![Cenario](../imgs/elements.png)
    
 * Estrutura Banco (NOSQL)
 
-![BD](../db_struct.png)
+![BD](../imgs/db_struct.png)
 
 * Definição do serviço
    ```json
@@ -161,11 +161,11 @@ Exemplos
    }
    ```
 * Exemplo de output via CLI, vejam o mesmo output sendo gerado por drivers diferentes e para serviços diferentes
-![CLI1](../cli1.png)
+![CLI1](../imgs/cli1.png)
 
-![CLI2](../cli2.png)
+![CLI2](../imgs/cli2.png)
 
 * Para todos devices
 
-![CLIRE](../cli_re.png)
-![CLI](../cli.png)
+![CLIRE](../imgs/cli_re.png)
+![CLI](../imgs/cli.png)
