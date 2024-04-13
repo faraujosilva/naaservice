@@ -4,13 +4,17 @@ Exemplos
    * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
 
-- Cenário
+Cenário
+============
 ![screenshot](../imgs/elements.png)
    
-* Estrutura Banco (NOSQL)
+Estrutura Banco (NOSQL)
+============
 ![screenshot](../imgs/db_struct.png)
 
-* Definição do serviço
+
+Definição do serviço
+============
    ```json
       {
          "service_name": "cpu_usage",
@@ -76,8 +80,9 @@ Exemplos
       }
    ```
 
-* Exemplo retorno API
-   
+
+Retorno da API
+============
    ```json
       {
          "device_data": [
@@ -160,9 +165,11 @@ Exemplos
          ]
    }
    ```
-* Requisição com filtro
+Requisição com filtro
+============
 ![screenshot](../imgs/req3_filter.png)
 
-* Requisição sem filtro
+Requisição sem filtro
+============
 ![screenshot](../imgs/req1.png)
 ![screenshot](../imgs/req2.png)
