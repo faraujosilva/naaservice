@@ -196,6 +196,7 @@ Exemplos
    }
    ```
 * Requisição com filtro
+
 ![REQ3](docs/req3_filter.png)
 
 * Requisição sem filtro
