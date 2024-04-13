@@ -4,13 +4,16 @@ Exemplos
    * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
 
-- Cenário
-![Cenario](../imgs/elements.png)
+Cenário
+============
+![screenshot](../imgs/elements.png)
    
-* Estrutura Banco (NOSQL)
-![BD](../imgs/db_struct.png)
+Estrutura Banco (NOSQL)
+============
+![screenshot](../imgs/db_struct.png)
 
-* Definição do serviço
+Definição do serviço
+============
    ```json
       {
          "service_name": "cpu_usage",
@@ -76,8 +79,8 @@ Exemplos
       }
    ```
 
-* Exemplo retorno CLI
-   
+Exemplo retorno CLI
+============
    ```json
       {
          "device_data": [
@@ -160,11 +163,15 @@ Exemplos
          ]
    }
    ```
-* Exemplo de output via CLI, vejam o mesmo output sendo gerado por drivers diferentes e para serviços diferentes
-![CLI1](../imgs/cli1.png)
+Exemplo de output via CLI
+============
+* Vale observar que o mesmo output está sendo gerado por drivers diferentes e para serviços diferentes
 
-![CLI2](../imgs/cli2.png)
+![screenshot](../imgs/cli1.png)
 
-* Para todos devices
-![CLIRE](../imgs/cli_re.png) 
-![CLI](../imgs/cli.png)
+![screenshot](../imgs/cli2.png)
+
+Para todos devices
+============
+
+![screenshot](../imgs/cli.png)
