@@ -199,7 +199,9 @@ Exemplos
 
 ![REQ3](docs/req3_filter.png)
 
+
 * Requisição sem filtro
+
 ![REQ1](docs/req1.png)
 ![REQ2](docs/req2.png)
 
