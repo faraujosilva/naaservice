@@ -41,7 +41,8 @@ Exemplos
    - Cenário
 ![Cenario](docs/elements.png)
    
-   - Estrutura Banco (NOSQL)
+   * Estrutura Banco (NOSQL)
+
 ![BD](docs/db_struct.png)
 
 * Definição do serviço
