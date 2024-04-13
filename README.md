@@ -27,6 +27,7 @@ Architecture
 
 Use Cases
 ============
+   * Monitoria inteligente com Zabbix e demais ferramentas.
    * Validar uniformemente se uma configuração existe em um grupo de equipamentos.
    * Disponibilizar APIs de serviços para integrações com ferramentas de ITSM como o ServiceNow para reservas automaticas de IP, interfaces, criação de novas VLANs e automaizações de deployments em ambientes de NGN(ACI, DNA, etc).
    * Integração da pipeline da empresa com o ambiente de rede para validações de testes de conectividade.
