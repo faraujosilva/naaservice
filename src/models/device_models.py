@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from enum import Enum
 
 
-
 class Interfaces(BaseModel):
     intf_name: str
     intf_description: str
@@ -24,11 +23,13 @@ class Interfaces(BaseModel):
     intf_in_discards: str
     intf_out_discards: str
 
+
 class ArpTable(BaseModel):
     mac: str
     ip: str
     intf: str
-    
+
+
 class Routes(BaseModel):
     network: str
     mask: str
@@ -36,7 +37,8 @@ class Routes(BaseModel):
     intf: str
     metric: str
     protocol: str
-    
+
+
 class CPUUsage(BaseModel):
     cpu_1min: str
     cpu_5min: str

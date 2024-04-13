@@ -1,18 +1,20 @@
 from abc import ABC, abstractmethod
 
+
 class IDatabase(ABC):
+    """Abstract class for all databases."""
     @abstractmethod
     def get(self):
-        pass
-    
+        """Get method to retrieve data from the database."""
+
     @abstractmethod
     def create(self):
-        pass
-    
+        """Create method to insert data into the database."""
+
     @abstractmethod
     def update(self):
-        pass
-    
+        """Update method to update data in the database."""
+
     @abstractmethod
     def delete(self):
-        pass
+        """Delete method to delete data from the database."""

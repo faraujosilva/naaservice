@@ -6,49 +6,57 @@ from typing import Union
 from src.utils.utils import get_nested_value
 from src.models.models import ResultOutput
 
+
 class OutputParser:
     def format(self, data, output_filter):
         raise NotImplementedError("Each parser must implement the format method.")
 
+
 class JsonParser(OutputParser):
-    def format(self, data, output_filter=''):
+    def format(self, data, output_filter=""):
         formatted_data = {}
-        if output_filter: pass
-            #formatted_data = get_nested_value(data, output_filter)
+        if output_filter:
+            pass
+        # formatted_data = get_nested_value(data, output_filter)
         return data
 
+
 class PrettyParser(OutputParser):
-    def format(self, data, output_filter=''):
+    def format(self, data, output_filter=""):
         return json.dumps(data, indent=4)
 
+
 class XmlParser(OutputParser):
-    def format(self, data, output_filter=''):
+    def format(self, data, output_filter=""):
         # Transforming dict to XML requires more logic, this is just a placeholder
         root = ET.Element("data")
         ET.SubElement(root, "output").text = str(data)
-        return ET.tostring(root, encoding='unicode')
+        return ET.tostring(root, encoding="unicode")
+
 
 class YamlParser(OutputParser):
-    def format(self, data, output_filter=''):
+    def format(self, data, output_filter=""):
         return yaml.dump(data)
+
 
 # Factory to create parser instances
 class ParserFactory:
     parsers = {
-        'json': JsonParser(),
-        'pretty': PrettyParser(),
-        'xml': XmlParser(),
-        'yaml': YamlParser(),
+        "json": JsonParser(),
+        "pretty": PrettyParser(),
+        "xml": XmlParser(),
+        "yaml": YamlParser(),
     }
 
     @staticmethod
     def get_parser(output_format):
         return ParserFactory.parsers.get(output_format, PrettyParser())
 
+
 # Main Parser class
 class Parser:
     @staticmethod
-    def parse_output(output: str, parse_string: str=None, group: int= None):       
+    def parse_output(output: str, parse_string: str = None, group: int = None):
         if parse_string:
             match = re.search(parse_string, output)
             if match:
@@ -56,5 +64,7 @@ class Parser:
         return output
 
     @staticmethod
-    def parse_result(output: dict, output_format: str = 'json', output_filter: str = '') -> Union[ResultOutput, str]:
+    def parse_result(
+        output: dict, output_format: str = "json", output_filter: str = ""
+    ) -> Union[ResultOutput, str]:
         raise NotImplementedError("Each parser must implement the parse_result method.")

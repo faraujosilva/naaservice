@@ -39,12 +39,9 @@ Use Cases
       - [Exemplos de API](docs/examples/API.md)
       - [Exemplos de CLI](docs/examples/CLI.md)
 
-
-
-
-
 RoadMap
 =======
+   * Implementar interfaces, classes e funções padrões para todos tipos de fabricantes e versões.
    * Implementar conectors para RestConf/NetConf, Snippets e ansible
    * Armazenamento de estados e configurações no banco
    * Features de aplicar configurações com estados e rollbacks
@@ -60,4 +57,3 @@ RoadMap
 Authors
 =======
 Criado por [Fernando](https://github.com/faraujosilva)
-

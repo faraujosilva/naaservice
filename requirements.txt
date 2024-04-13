@@ -5,3 +5,5 @@ python-dotenv
 pysnmp
 netmiko
 argparse
+pylint
+black
