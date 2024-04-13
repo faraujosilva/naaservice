@@ -12,7 +12,7 @@ CLASS_MAP = {
 class DeviceFactory:
     def create_device(self, device_ip: str, db: IDatabase) -> List[IDevice]:
         _query = {'ip': device_ip} if device_ip is not None else {}
-        #print(f"Querying device {device_ip}")
+        ##print(f"Querying device {device_ip}")
         db_devices = list(db.get(_query))
         # devs = [Cisco(**device) for device in db_devices] if len(db_devices) > 0 else None
         devs = []

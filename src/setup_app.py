@@ -27,7 +27,7 @@ def create_endpoint(blueprint, endpoint, method, data, file_name):
             connector = ConnectorFactory()
             engine = Engine()
             engine = engine.create(RequestParam(**request.args), db, driver, device, connector, Parser())
-            print(f"Engine loaded with {len(device)} devices")
+            #print(f"Engine loaded with {len(device)} devices")
             resp, code = engine.run()
             return jsonify(resp), code
         except Exception as e:

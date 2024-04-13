@@ -43,9 +43,10 @@ class DriverFactory(IDriver):
         driver = device.get_driver()
         drivers_dump = self.drivers.model_dump()
         commands = []
-        #TODO Checa se tem os comandos para o driver prioritario validando o porque nao deu match, vendor, os, etc
-        #TODO Se nao tiver, percorre os outros drivers
-        #TODO Se nao tiver, retorna erro
+        match_commands = [command for command in drivers_dump.get(driver).get(connector_name) if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os() and command.get('type') == device.get_type()]
+        if not match_commands:
+            raise ValueError(f"Commands not found for vendor: {device.get_vendor()} - os: {device.get_os()} - type: {device.get_type()} in {driver} driver")
+        
         for command in drivers_dump.get(driver).get(connector_name):
             if command.get('vendor') == device.get_vendor() and command.get('os') == device.get_os() and command.get('type') == device.get_type():
                 commands.append(Command(**command))

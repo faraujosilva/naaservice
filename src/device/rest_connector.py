@@ -15,7 +15,7 @@ class RestConnector(IConnector):
 
 class ViptelaRestConnector(RestConnector):
     def run(self, device: IDevice, command_detail: Command, credentials):
-        #print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
+        ##print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
         credentials = {
             "vmanage_ip": getenv("VMANAGE_IP", credentials.get('vmanage_ip')),
             "j_username": getenv("VMANAGE_USER", credentials.get('j_username')),

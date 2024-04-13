@@ -1,7 +1,9 @@
-Open Network Orchestration Tool (Prototipo)
+Open Network Orchestration Tool (Prototipo para fins de estudo)
 =======
 ONOT é uma ferrementa de automação focada na automação de elementos de redes de diversos fabricantes, versões e formas de acesso.
-Como um complemento para todo ecossistema de automação existente hoje, o ONOT consegue interagir com scripts em python, playbooks em ansible, comandos SNMP de GET, RestConf/NetConf, SSH, Telnet e RESTAPI, formatando e garantindo uma comunicação a nível corporativo com o ambiente de Rede através da exposição de APIs.
+Como um complemento para todo ecossistema de automação existente hoje, o ONOT consegue interagir com scripts em python, playbooks em ansible, comandos SNMP de GET, RestConf/NetConf, SSH, Telnet e RESTAPI, formatando e garantindo uma comunicação a nível corporativo com o ambiente de Rede através da exposição de APIs, com o principal objetivo de unificar, centralizar e padronizar todas ferramentas e maneiras que temos de lidar com automação em um único lugar, independente da sua escolha de connector(seja netmiko, e etc.).
+
+A base da arquitetura é no NSO (Cisco Network Services Orchestrator) com um diferencial de proporcionar maior flexbilidade para que os NEDs( NSO ) sejam qualquer coisa, desde um playbook até um simples SNMP, removendo a complexidade de definir modelos YANG.
 
 
 Design
@@ -16,7 +18,8 @@ Design
    * Possibilita a expansão para outras formas de API como de configuração, reservas de interface/ip e outros.
    * Auto detecta (se possível) o tipo do driver a ser usado(netmiko) como cisco_ios, nxos e etc.
    * Integra com elementos externos para consumir informações dos elementos como IP, Nome, Vendor e etc como NetBox, CMDBs e outros.
-
+   * Os drivers(SSH e etc) interagem com os connectors(implementações do SSH, como Netmiko etc) para alcançar os elementos.
+   * Se o driver prioritário padrão não for definido, então uma ordem default será executada (consultar DriverOrder class), e isso também serve caso o driver prioritário falhe, a ordem de 'fallback' é respeitada.
 Architecture
 =================
 ![Logo](docs/architecture.png)
@@ -30,7 +33,19 @@ Use Cases
    * Armazenar o estado da coleta de vários comandos afim de garantir um historíco linear do comportamento da rede.
    * Automatizar vários comandos em diversos equipamentos de vendors e versõse diferentes com apenas um JSON, como por exemplo validações antes e após mudanças no ambiente.
 
-      ```json
+Exemplos
+============
+   * Definição de um endpoint/serviço para coletar o uso da CPU em 4 equipamentos( 02 Cisco IOS, 01 Cisco NXOS e 01 Viptela(Stub))
+   * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
+   * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
+   - Cenário
+![Cenario](docs/elements.png)
+   
+   - Estrutura Banco (NOSQL)
+![BD](docs/db_struct.png)
+
+* Definição do serviço
+   ```json
       {
          "service_name": "cpu_usage",
          "endpoint": {
@@ -84,7 +99,7 @@ Use Cases
             },
                "api": {
                   "rest": [
-                     {"vendor": "cisco", "os": "viptela", "type": "sdwan", "command_name": "cpu_usage", "command": "device/system/status?deviceId={{device_ip}}", "headers": {"Content-Type": "application/json"}, "field": "data[0].cpu_user", "parse": "(.*)", "group": 1}
+                     {"vendor": "cisco", "os": "viptela", "type": "sdwan", "command_name": "cpu_usage", "command": "device/system/status?deviceId={{device_ip}}", "headers": {"Content-Type": "application/json"}, "field": "data.cpu_user", "parse": "(.*)", "group": 1}
                   ],
                   "restconf": [
                      {"vendor": "cisco", "os": "iosxe", "type": "router", "command_name": "cpu_usage", "command": "data/Cisco-IOS-XE-process-cpu-oper:cpu-usage/cpu-utilization/five-seconds", "headers": {"Content-Type": "application/yang-data+json"}, "field": "Cisco-IOS-XE-process-cpu-oper:five-seconds", "parse": "(.*)", "group": 1}
@@ -93,9 +108,125 @@ Use Cases
             
             }
       }
+   ```
+
+* Exemplo retorno API
+   
+   ```json
+      {
+         "device_data": [
+            {
+                  "device_info": {
+                     "driver": "snmp",
+                     "ip": "192.168.244.138",
+                     "name": "RT01",
+                     "os": "ios",
+                     "port": "22",
+                     "type": "router",
+                     "vendor": "cisco"
+                  },
+                  "stderr": [],
+                  "stdout": [
+                     {
+                        "command_name": "cpu_usage",
+                        "output": "0",
+                        "status": "success"
+                     }
+                  ]
+            },
+            {
+                  "device_info": {
+                     "driver": "snmp",
+                     "ip": "192.168.244.139",
+                     "name": "RT02",
+                     "os": "ios",
+                     "port": "22",
+                     "type": "router",
+                     "vendor": "cisco"
+                  },
+                  "stderr": [],
+                  "stdout": [
+                     {
+                        "command_name": "cpu_usage",
+                        "output": "0",
+                        "status": "success"
+                     }
+                  ]
+            },
+            {
+                  "device_info": {
+                     "driver": "api",
+                     "ip": "10.10.1.17",
+                     "name": "site3-vedge01",
+                     "os": "viptela",
+                     "port": "443",
+                     "type": "sdwan",
+                     "vendor": "cisco"
+                  },
+                  "stderr": [],
+                  "stdout": [
+                     {
+                        "command_name": "cpu_usage",
+                        "output": "5.53",
+                        "status": "success"
+                     }
+                  ]
+            },
+            {
+                  "device_info": {
+                     "driver": "ssh",
+                     "ip": "192.168.244.140",
+                     "name": "SW01",
+                     "os": "nxos",
+                     "port": "22",
+                     "type": "switch",
+                     "vendor": "cisco"
+                  },
+                  "stderr": [],
+                  "stdout": [
+                     {
+                        "command_name": "cpu_usage",
+                        "output": "0.23",
+                        "status": "success"
+                     }
+                  ]
+            }
+         ]
+   }
+   ```
+* Requisição com filtro
+![REQ3](docs/req3_filter.png)
+
+* Requisição sem filtro
+![REQ1](docs/req1.png)
+   ![REQ2](docs/req2.png)
+
+* Exemplo de output via CLI, vejam o mesmo output sendo gerado por drivers diferentes e para serviços diferentes
+![CLI1](docs/cli1.png)
+
+![CLI2](docs/cli2.png)
+
+* Para todos devices
+![CLIRE](docs/cli_re.png)
+![CLI](docs/cli.png)
+
+
+
+RoadMap
+=======
+   * Implementar conectors para RestConf/NetConf, Snippets e ansible
+   * Armazenamento de estados e configurações no banco
+   * Features de aplicar configurações com estados e rollbacks
+   * Expandir solução para outros vendors e outros comandos
+   * Pipeline CI
+   * Testes
+   * PyAts e Genie
+   * Simplificar JSON
+   * Filtros nas requisições (qual campo do output retornar/pesquisar com operadores HTTP)
+   * Auto detect para device types ( router, switch etc )
+   * Integração com CMDBs/DCIMs/ITSM tools
 
 Authors
 =======
-
 Criado por [Fernando](https://github.com/faraujosilva)
 

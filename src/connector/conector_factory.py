@@ -1,7 +1,7 @@
 from typing import Union
 from src.connector.netmiko_connector import NetmikoConnector
 from src.connector.snmp_connector import SNMPConnector
-from src.connector.rest_connector import RestConnector
+from src.device.rest_connector import RestConnector
 
 class ConnectorFactory:
     def create_connector(self, connector_name: str) -> Union[NetmikoConnector, SNMPConnector, RestConnector]:

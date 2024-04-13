@@ -6,6 +6,11 @@ from src.device.interface import IDevice
 from src.connector.interface import IConnector
 from src.models.models import Command, ConnectorOutput
 from src.utils.utils import netmiko_commandError
+import logging
+
+# Set up logging to only display critical errors for Paramiko and Netmiko
+logging.getLogger("paramiko").setLevel(logging.CRITICAL)  # No tracebacks for Paramiko
+logging.getLogger("netmiko").setLevel(logging.CRITICAL)   # No tracebacks for Netmiko
 
 GLOBAL_DRIVER_CACHING = {}
 
@@ -21,11 +26,11 @@ class NetmikoConnector(IConnector):
         }
         
         if GLOBAL_DRIVER_CACHING.get(device.get_ip()):
-            #print('Using cache')
+            ##print('Using cache')
             net_device['device_type'] = GLOBAL_DRIVER_CACHING[device.get_ip()]
         else:
             if credentials.get('community'):
-                #print('Discovering using SNMP')
+                ##print('Discovering using SNMP')
                 try:
                     snmp_detect = SNMPDetect(hostname=device.get_ip(), snmp_version='v2c', community=credentials.get('community'))
                     best_match = snmp_detect.autodetect()
@@ -50,17 +55,17 @@ class NetmikoConnector(IConnector):
                     return ConnectorOutput(error="General error in autodetecting device type")
         try:
             with ConnectHandler(**net_device) as net_connect:
+                #test if have exception connecthandler
                 output = net_connect.send_command(command_detail.command).strip()
                 if netmiko_commandError(output):
                     return ConnectorOutput(error=f"Command: {command_detail.command} ran with error: {output}")
-
-        except NetMikoTimeoutException:
+        except NetMikoTimeoutException as e: #This is instance for paramiko errors
             return ConnectorOutput(error="Timeout in connecting to device")
-
         except NetMikoAuthenticationException:
             return ConnectorOutput(error="Authentication error in connecting to device")
 
         except Exception:
+            
             return ConnectorOutput(error="General error in connecting to device")
 
         return ConnectorOutput(output=output)    
