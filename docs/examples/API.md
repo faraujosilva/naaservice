@@ -5,10 +5,10 @@ Exemplos
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
 
 - Cenário
-![Cenario](../imgs/elements.png)
+![screenshot](../imgs/elements.png)
    
 * Estrutura Banco (NOSQL)
-![BD](../imgs/db_struct.png)
+![screenshot](../imgs/db_struct.png)
 
 * Definição do serviço
    ```json
@@ -161,11 +161,8 @@ Exemplos
    }
    ```
 * Requisição com filtro
-
-![REQ3](../imgs/req3_filter.png)
-
+![screenshot](../imgs/req3_filter.png)
 
 * Requisição sem filtro
-
-![REQ1](../imgs/req1.png)
-![REQ2](../imgs/req2.png)
+![screenshot](../imgs/req1.png)
+![screenshot](../imgs/req2.png)
