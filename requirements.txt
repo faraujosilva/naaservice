@@ -7,3 +7,5 @@ netmiko
 argparse
 pylint
 black
+pytest
+pytest-cov

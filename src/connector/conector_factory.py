@@ -5,14 +5,15 @@ from src.connector.rest_connector import RestConnector
 
 
 class ConnectorFactory:
-    def create_connector(
-        self, connector_name: str
-    ) -> Union[NetmikoConnector, SNMPConnector, RestConnector]:
-        registry = {
+    def __init__(self):
+        self.connectors = {
             "netmiko": NetmikoConnector(),
             "pysnmp": SNMPConnector(),
             "rest": RestConnector(),
         }
-        if connector_name not in registry:
+    def create_connector(
+        self, connector_name: str
+    ) -> Union[NetmikoConnector, SNMPConnector, RestConnector]:
+        if connector_name not in self.connectors:
             raise Exception(f"Connector {connector_name} not found")
-        return registry.get(connector_name)
+        return self.connectors.get(connector_name)

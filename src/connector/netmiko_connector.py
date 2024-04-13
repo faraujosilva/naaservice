@@ -21,7 +21,22 @@ GLOBAL_DRIVER_CACHING = {}
 
 class NetmikoConnector(IConnector):
     """Implementation of IConnector using Netmiko as the underlying library"""
-
+    def __try_ssh_autodetect(self, ssh_detect: SSHDetect):
+        best_match = 'cisco_ios'
+        try:
+            best_match = ssh_detect.autodetect()
+        except NetMikoTimeoutException:
+            return ConnectorOutput(error="Timeout in autodetecting device type")
+        except NetMikoAuthenticationException:
+            return ConnectorOutput(
+                error="Authentication error in autodetecting device type"
+            )
+        except Exception:
+            return ConnectorOutput(
+                error="General error in autodetecting device type"
+            )
+        return best_match
+            
     def run(
         self, device: IDevice, command_detail: Command, credentials: dict
     ) -> ConnectorOutput:
@@ -52,27 +67,23 @@ class NetmikoConnector(IConnector):
                         net_device["device_type"] = best_match
                         GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except Exception:
-                    return ConnectorOutput(
-                        error="Error in autodetecting device type using SNMP"
-                    )
+                    try:
+                        detect_ssh = SSHDetect(**net_device)
+                        best_match = self.__try_ssh_autodetect(detect_ssh(**net_device))
+                        if best_match:
+                            net_device["device_type"] = best_match
+                            GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
+                    except Exception:
+                        return ConnectorOutput(error="Could not detect device type neither by SNMP nor SSH")
             else:
                 try:
-                    ssh_detect = SSHDetect(**net_device)
-                    best_match = ssh_detect.autodetect()
-
+                    detect_ssh = SSHDetect(**net_device)
+                    best_match = self.__try_ssh_autodetect(detect_ssh(**net_device))
                     if best_match:
                         net_device["device_type"] = best_match
                         GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
-                except NetMikoTimeoutException:
-                    return ConnectorOutput(error="Timeout in autodetecting device type")
-                except NetMikoAuthenticationException:
-                    return ConnectorOutput(
-                        error="Authentication error in autodetecting device type"
-                    )
                 except Exception:
-                    return ConnectorOutput(
-                        error="General error in autodetecting device type"
-                    )
+                    return ConnectorOutput(error="Could not detect device type by SSH")
         try:
             with ConnectHandler(**net_device) as net_connect:
                 # test if have exception connecthandler
