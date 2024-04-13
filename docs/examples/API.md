@@ -3,11 +3,11 @@ Exemplos
    * Definição de um endpoint/serviço para coletar o uso da CPU em 4 equipamentos( 02 Cisco IOS, 01 Cisco NXOS e 01 Viptela(Stub))
    * Simulamos o retorno da API da Viptela com o input/endpoint/output real, por questões de disponibilidade para utilizar no LAB e dificuldade do uso do Always ON da Cisco.
    * Não especificar o device_ip como filtro, então a coleta acontecerá para todos elementos disponíveis no banco
-   - Cenário
+
+- Cenário
 ![Cenario](../imgs/elements.png)
    
 * Estrutura Banco (NOSQL)
-
 ![BD](../imgs/db_struct.png)
 
 * Definição do serviço
