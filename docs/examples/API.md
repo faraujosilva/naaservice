@@ -172,4 +172,5 @@ Requisição com filtro
 Requisição sem filtro
 ============
 ![screenshot](../imgs/req1.png)
+
 ![screenshot](../imgs/req2.png)
