@@ -200,7 +200,7 @@ Exemplos
 
 * Requisição sem filtro
 ![REQ1](docs/req1.png)
-   ![REQ2](docs/req2.png)
+![REQ2](docs/req2.png)
 
 * Exemplo de output via CLI, vejam o mesmo output sendo gerado por drivers diferentes e para serviços diferentes
 ![CLI1](docs/cli1.png)
@@ -208,6 +208,7 @@ Exemplos
 ![CLI2](docs/cli2.png)
 
 * Para todos devices
+
 ![CLIRE](docs/cli_re.png)
 ![CLI](docs/cli.png)
 
