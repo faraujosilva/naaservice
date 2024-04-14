@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from datetime import timedelta
 from src.models.models import Command
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from pysnmp.proto.rfc1902 import TimeTicks 
 from src.connector.conector_factory import ConnectorFactory
 from src.connector.netmiko_connector import NetmikoConnector, NetMikoAuthenticationException, NetMikoTimeoutException

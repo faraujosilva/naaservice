@@ -2,7 +2,7 @@ import json
 from os import getenv
 import requests
 from src.connector.interface import IConnector
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.utils.utils import placeholder_device_ip, get_nested_value
 from src.models.models import Command, ConnectorOutput
 

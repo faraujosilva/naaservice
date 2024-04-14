@@ -1,184 +1,52 @@
-# from src.device.interface import IDevice
-
-
-# class BaseDevice(IDevice):
-#     """BaseDevice class to represent a device in the network."""
-#     def __init__(
-#         self,
-#         name: str,
-#         ip: str,
-#         type: str,
-#         port: int,
-#         vendor: str,
-#         os: str,
-#         driver: str = None,
-#     ):
-#         self.__name = name
-#         self.__ip = ip
-#         self.__port = 22 if not port else port
-#         self.__type = type
-#         self.__vendor = vendor
-#         self.__os = os
-#         self.__driver = driver
-
-#     def get_driver(self):
-#         """Get the driver for the device."""
-#         return self.__driver
-
-#     def get_ip(self):
-#         """Get the IP address of the device."""
-#         return self.__ip
-
-#     def get_os(self):
-#         """Get the OS of the device."""
-#         return self.__os
-
-#     def get_type(self):
-#         """Get the type of the device."""
-#         return self.__type
-
-#     def get_vendor(self):
-#         """Get the vendor of the device."""
-#         return self.__vendor
-
-#     def get_port(self):
-#         """Get the port of the device."""
-#         return self.__port
-
-#     def to_dict(self):
-#         """Convert the device to a dictionary."""
-#         return {
-#             "name": self.__name,
-#             "ip": self.__ip,
-#             "port": self.__port,
-#             "type": self.__type,
-#             "vendor": self.__vendor,
-#             "os": self.__os,
-#             "driver": self.__driver,
-#         }
-
-#     def set_driver(self, driver):
-#         """Set the driver for the device."""
-#         self.__driver = driver
-
 import unittest
-from unittest.mock import patch, MagicMock
-from src.device.base import BaseDevice
+from unittest.mock import MagicMock, patch
+from src.database.mongodb import MongoDB
+from ddt import ddt, data, unpack
+from src.device.interfaces import IDevice, IRouter, ISwitch
+from src.connector.conector_factory import ConnectorFactory
+from src.device.device_factory import DeviceFactory
 
-class TestBaseDevice(unittest.TestCase):
-    @patch('src.device.base.IDevice')
-    def test_init(self, mock_idevice):
+@ddt
+class TestDevice(unittest.TestCase):
+    @data(
+        ('1.2.3.4', 'router', 'ios', 'ssh', 22, 'SSH IOS: show ip route', 'IOS Base'),
+        ('1.2.3.4', 'router', 'nxos', 'ssh', 22, 'SSH NXOS: show ip route vrf all', 'NXOS Base'),
+        ('1.2.3.4', 'switch', 'ios', 'ssh', 22, 'SSH IOS: show vlan br', 'IOS Base'),
+        ('1.2.3.4', 'switch', 'nxos', 'ssh', 22, 'SSH NXOS: show vlan all', 'NXOS Base'),
+        ('1.2.3.4', 'sdwan', 'viptela', 'api', 443, 'API: /routes/all_vrfs', 'API Base'),
+        ('1.2.3.4', 'sdwan', 'viptela', 'api', None, 'API: /routes/all_vrfs', 'API Base'),
+        ('1.2.3.4', 'router', 'ios', None, 22, 'SSH IOS: show ip route', 'IOS Base'),
+    )
+    @patch('src.database.mongodb.MongoDB.get')
+    @patch('src.database.mongodb.MongoClient')
+    @unpack
+    def test_devices(self, ip: str, d_type: str, os: str, driver: str, port: int, expected1, expected2, mock_mongo_client, mock_mongo_get):
         # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        # Act
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Assert
-        self.assertEqual(basedevice._BaseDevice__name, name)
-        self.assertEqual(basedevice._BaseDevice__ip, ip)
-        self.assertEqual(basedevice._BaseDevice__port, port)
-        self.assertEqual(basedevice._BaseDevice__type, type)
-        self.assertEqual(basedevice._BaseDevice__vendor, vendor)
-        self.assertEqual(basedevice._BaseDevice__os, os)
-        self.assertEqual(basedevice._BaseDevice__driver, driver)
-
-    @patch('src.device.base.IDevice')
-    def test_get_driver(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Act
-        driver = basedevice.get_driver()
-        # Assert
-        self.assertEqual(driver, driver)
-
-    @patch('src.device.base.IDevice')
-    def test_get_ip(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Act
-        ip = basedevice.get_ip()
-        # Assert
-        self.assertEqual(ip, ip)
-
-    @patch('src.device.base.IDevice')
-    def test_get_os(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Act
-        os = basedevice.get_os()
-        # Assert
-        self.assertEqual(os, os)
+        db_name = 'test_db'
+        collection = 'test_collection'
+        connection_string = 'test_connection_string'
+        expected_device_data = {'vendor': 'cisco', 'type': d_type, 'os': os, 'ip': ip, 'driver': driver, 'name': 'R1', 'port': port}
         
-    @patch('src.device.base.IDevice')
-    def test_get_type(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Act
-        type = basedevice.get_type()
-        # Assert
-        self.assertEqual(type, type)
+        mock_mongo_client.return_value = MagicMock()
+        mongodb = MongoDB(db_name, collection, connection_string)
+        mock_mongo_get.return_value = [expected_device_data]
         
-    @patch('src.device.base.IDevice')
-    def test_get_vendor(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
-        # Act
-        vendor = basedevice.get_vendor()
-        # Assert
-        self.assertEqual(vendor, vendor)
+        device_factory = DeviceFactory()
+        connector_factory = ConnectorFactory()
+        connector = connector_factory.create_connector('netmiko')
         
-    @patch('src.device.base.IDevice')
-    def test_get_port(self, mock_idevice):
-        # Arrange
-        name = 'test_name'
-        ip = 'test_ip'
-        type = 'test_type'
-        port = 22
-        vendor = 'test_vendor'
-        os = 'test_os'
-        driver = 'test_driver'
-        basedevice = BaseDevice(name, ip, type, port, vendor, os, driver)
         # Act
-        port = basedevice.get_port()
+        devices = device_factory.create_device(ip, mongodb, connector)
+        
         # Assert
-        self.assertEqual(port, port)
+        self.assertEqual(len(devices), 1)  # Assuming that one device is expected to be created
+        self.assertIsInstance(devices[0], IDevice)  # Assuming that the device should be an IRouter
+        self.assertEqual(devices[0].get_ip(), ip)
+        mock_mongo_get.assert_called_with({'ip': ip})
+        if isinstance(devices[0], IRouter):
+            self.assertEqual(devices[0].get_routes(), expected1)
+        elif isinstance(devices[0], ISwitch):
+            self.assertEqual(devices[0].get_vlans(), expected1)
+            
+        self.assertEqual(devices[0].get_os(), os)
+        self.assertEqual(devices[0].BASE, expected2)

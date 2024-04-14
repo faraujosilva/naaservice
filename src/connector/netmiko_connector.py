@@ -7,7 +7,7 @@ from netmiko.exceptions import (
     NetMikoAuthenticationException,
     NetMikoTimeoutException,
 )
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.connector.interface import IConnector
 from src.models.models import Command, ConnectorOutput
 from src.utils.utils import netmiko_commandError

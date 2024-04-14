@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Union, List
 from src.models.models import SSHDriver, APIDriver, SNMPDriver
 from src.connector.interface import IConnector
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.models.models import Command
 
 

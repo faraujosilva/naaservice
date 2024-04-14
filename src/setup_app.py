@@ -29,9 +29,9 @@ def create_endpoint(blueprint, endpoint, method, data, file_name):
                 app.config["mongo_collection"],
                 app.config["mongosc"],
             )
-            device_factory = DeviceFactory()
-            device = device_factory.create_device(request.args.get("device_ip"), db)
             connector = ConnectorFactory()
+            device_factory = DeviceFactory()
+            device = device_factory.create_device(request.args.get("device_ip"), db, connector)
             engine = Engine()
             engine = engine.create(
                 RequestParam(**request.args), db, driver, device, connector, Parser()

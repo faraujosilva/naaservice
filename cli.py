@@ -44,10 +44,10 @@ class CLI(Engine):
         devices = []
         if isinstance(self.request_param.device_ip, list):
             for device_ip in self.request_param.device_ip:
-                device = self.device_factory.create_device(device_ip, self.db)
+                device = self.device_factory.create_device(device_ip, self.db, self.connector)
                 devices.extend(device)
         else:
-            device = self.device_factory.create_device(self.request_param.device_ip, self.db)
+            device = self.device_factory.create_device(self.request_param.device_ip, self.db, self.connector)
             devices.extend(device)
         self.devices = devices
         self.db = self.db

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.models.models import Command, ConnectorOutput
 
 

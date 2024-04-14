@@ -8,9 +8,9 @@ from pysnmp.hlapi import (
     ObjectIdentity,
 )
 from pysnmp.proto.rfc1902 import TimeTicks
-from datetime import timedelta, datetime
+from datetime import timedelta
 from src.connector.interface import IConnector
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.models.models import Command, ConnectorOutput
 
 

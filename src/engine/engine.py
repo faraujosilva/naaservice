@@ -1,7 +1,7 @@
 import json
 from typing import List, Tuple
 from src.driver.interface import IDriver
-from src.device.interface import IDevice
+from src.device.interfaces import IDevice
 from src.models.models import (
     RequestParam,
     ConnectorOutput,
@@ -70,14 +70,13 @@ class Engine:
         driver_order = self.drivers.get_driver_order()
 
         for device in self.devices:
-            device_ip = device.get_ip()
             # print(f"Running device {device_ip}")
             device_output = DeviceOutput(
-                device_info=device.to_dict(), stdout=[], stderr=[]
+                device_info=device.to_dict, stdout=[], stderr=[]
             )
+            
             success = False
             priority_driver = device.get_driver()
-            # print(f"Device {device_ip} has priority driver {priority_driver}")
 
             if priority_driver:
                 ordered_drivers = [priority_driver] + [

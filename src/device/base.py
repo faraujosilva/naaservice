@@ -1,62 +1,64 @@
-from src.device.interface import IDevice
-
+from src.device.interfaces import IDevice
 
 class BaseDevice(IDevice):
-    """BaseDevice class to represent a device in the network."""
-    def __init__(
-        self,
-        name: str,
-        ip: str,
-        type: str,
-        port: int,
-        vendor: str,
-        os: str,
-        driver: str = None,
-    ):
-        self.__name = name
-        self.__ip = ip
-        self.__port = 22 if not port else port
-        self.__type = type
-        self.__vendor = vendor
-        self.__os = os
-        self.__driver = driver
+    def __init__(self, ip: str, name: str, type: str, port: int, vendor: str, os: str, driver:str =None):
+        self._ip = ip
+        self._name = name
+        self._d_type = type
+        self._port = port
+        self._vendor = vendor
+        self._os = os
+        self._driver = driver
+        self._credentials = {}
+        #TODO colocar driver
+        self.BASE = 'Base Device'
 
-    def get_driver(self):
-        """Get the driver for the device."""
-        return self.__driver
-
-    def get_ip(self):
-        """Get the IP address of the device."""
-        return self.__ip
-
-    def get_os(self):
-        """Get the OS of the device."""
-        return self.__os
-
-    def get_type(self):
-        """Get the type of the device."""
-        return self.__type
-
-    def get_vendor(self):
-        """Get the vendor of the device."""
-        return self.__vendor
-
-    def get_port(self):
-        """Get the port of the device."""
-        return self.__port
-
+    @property
+    def IP(self):
+        return self._ip
+    
+    @property
+    def NAME(self):
+        return self._name
+    
+    @property
+    def TYPE(self):
+        return self._d_type
+    
+    @property
+    def PORT(self):
+        return self._port
+    
+    @property
+    def VENDOR(self):
+        return self._vendor
+    
+    @property
+    def OS(self):
+        return self._os
+    
+    @property
+    def DRIVER(self):
+        return self._driver
+    
+    @property
+    def CREDENTIALS(self):
+        return self._credentials
+    
+    @property
     def to_dict(self):
-        """Convert the device to a dictionary."""
         return {
-            "name": self.__name,
-            "ip": self.__ip,
-            "port": self.__port,
-            "type": self.__type,
-            "vendor": self.__vendor,
-            "os": self.__os,
-            "driver": self.__driver,
+            "ip": self.IP,
+            "name": self.NAME,
+            "type": self.TYPE,
+            "port": self.PORT,
+            "vendor": self.VENDOR,
+            "os": self.OS,
+            "driver": self.DRIVER,
         }
+    
+    def set_credentials(self, credentials: dict):
+        self._credentials = credentials
 
-    def set_driver(self, driver):
-        """Set the driver for the device."""
-        self.__driver = driver
+    def set_driver(self, driver: str):
+        self._driver = driver
