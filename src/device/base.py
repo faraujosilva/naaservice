@@ -10,7 +10,6 @@ class BaseDevice(IDevice):
         self._os = os
         self._driver = driver
         self._credentials = {}
-        #TODO colocar driver
         self.BASE = 'Base Device'
 
     @property
