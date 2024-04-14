@@ -5,26 +5,31 @@ from src.connector.interface import IConnector
 from src.device.interface import IDevice
 from src.utils.utils import placeholder_device_ip, get_nested_value
 from src.models.models import Command, ConnectorOutput
+from src.models.m_errors import *
 
 
 class RestConnector(IConnector):
     """Implementation of IConnector using requests as the underlying library"""
-    def run(self, device: IDevice, command_detail: Command, credentials):
+    def run(self, device: IDevice, command_detail: Command):
         """ Implementation method for IConnector interface"""
+        try:
+            device.CREDENTIALS
+        except Exception:
+            return ConnectorOutput(error=BaseErrors.CREDENTIAL_ERROR)
         if device.get_os() in CLASS_REST_MAPPING:
             return CLASS_REST_MAPPING[device.get_os()]().run(
-                device, command_detail, credentials
+                device, command_detail, device.CREDENTIALS
             )
         return None  # TODO: Implement default HTTP request here, this is not particular for vendor or something
 
 
 class ViptelaRestConnector(RestConnector):
-    def run(self, device: IDevice, command_detail: Command, credentials):
+    def run(self, device: IDevice, command_detail: Command):
         ##print(f"Running Viptela driver for {device.get_ip()} with command {command_detail.command}")
         credentials = {
-            "vmanage_ip": getenv("VMANAGE_IP", credentials.get("vmanage_ip")),
-            "j_username": getenv("VMANAGE_USER", credentials.get("j_username")),
-            "j_password": getenv("VMANAGE_PASS", credentials.get("j_password")),
+            "vmanage_ip": getenv("VMANAGE_IP", device.CREDENTIALS.get("vmanage_ip")),
+            "j_username": getenv("VMANAGE_USER", device.CREDENTIALS.get("j_username")),
+            "j_password": getenv("VMANAGE_PASS", device.CREDENTIALS.get("j_password")),
         }
         if (
             not credentials.get("vmanage_ip")
@@ -32,7 +37,7 @@ class ViptelaRestConnector(RestConnector):
             or not credentials.get("j_password")
         ):
             return ConnectorOutput(
-                error="VMANAGE_IP, VMANAGE_USER and VMANAGE_PASS are required"
+                error=BaseErrors.CREDENTIAL_ERROR
             )
 
         self.session = {}
@@ -43,7 +48,7 @@ class ViptelaRestConnector(RestConnector):
                 credentials.get("j_password"),
             )
         except Exception as err_stats:
-            return ConnectorOutput(error=str(err_stats))
+            return ConnectorOutput(error=ViptelaErrors.LOGIN_ERROR)
         endpoint = placeholder_device_ip(command_detail.command, device.get_ip())
 
         req = self.__get_request(endpoint, credentials.get("vmanage_ip"))
@@ -53,7 +58,7 @@ class ViptelaRestConnector(RestConnector):
             data = json.loads(req)
             field_value = get_nested_value(data, command_detail.field)
             return ConnectorOutput(output=field_value)
-        return ConnectorOutput(error="No data found")
+        return ConnectorOutput(error=ViptelaErrors.NO_DATA_FOUND)
 
     def __login(self, vmanage_ip, username, password):
         """Login to vmanage"""
@@ -89,7 +94,7 @@ class ViptelaRestConnector(RestConnector):
 
 
 class AciRestConnector(RestConnector):
-    def run(self, device: IDevice, command_detail: Command, credentials: dict):
+    def run(self, device: IDevice, command_detail: Command):
         """ Implementation method for IConnector interface"""
 
 CLASS_REST_MAPPING = {

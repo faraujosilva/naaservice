@@ -1,25 +1,65 @@
-from typing import List
-from src.device.cisco import Cisco
-from src.device.interface import IDevice
+from typing import Union, List
+from src.device.interface import IRouter, ISwitch
 from src.database.interface import IDatabase
+from src.connector.interface import IConnector
+from src.device.cisco.ios import (
+    IOSSwitch,
+    IOSRouter,
+)
+from src.device.cisco.nxos import (
+    NXOSRouter,
+    NXOSSwitch,
+)
+from src.device.cisco.viptela import ViptelaRouter
+from src.device.cisco.ios import IOSSwitch
 
-
-CLASS_MAP = {"cisco": Cisco}
-
-
+CLASS_MAP = {
+    'cisco': {
+        'router': {
+            'ios': IOSRouter,
+            'nxos': NXOSRouter,
+        },
+        'switch': {
+            'ios': IOSSwitch,
+            'nxos': NXOSSwitch
+        },
+        'sdwan': {
+            'viptela': ViptelaRouter
+        }
+    },
+    'juniper': {}
+}
 class DeviceFactory:
-    def create_device(self, device_ip: str, db: IDatabase) -> List[IDevice]:
-        _query = {"ip": device_ip} if device_ip is not None else {}
-        ##print(f"Querying device {device_ip}")
+    """
+    Create a list of device instances based on the database entries matching the given IP address.
+    
+    Parameters:
+        ip (str): IP address to query the devices.
+        db (IDatabase): Database interface to query devices.
+        connector (IConnector): Connector interface used for device communication.
+
+    Returns:
+        List[Union[IRouter, ISwitch]]: A list of initialized device objects.
+
+    Raises:
+        ValueError: If no devices are found for the given IP.
+    """
+    def create_device(self, ip: str, db: IDatabase, connector: IConnector, credentials: dict) -> List[Union[IRouter, ISwitch]]:
+        """ Create a list of device instances based on the database entries matching the given IP address."""
+        _query = {"ip": ip} if ip is not None else {}
         db_devices = list(db.get(_query))
-        # devs = [Cisco(**device) for device in db_devices] if len(db_devices) > 0 else None
         devs = []
         for device in db_devices:
-            device_type = device.get("vendor").lower()
-            device_class = CLASS_MAP.get(device_type)
-            if device_class is None:
-                raise Exception(f"Device type {device_type} not found")
-            devs.append(device_class(**device))
-        if devs is None:
-            raise Exception(f"Device {device_ip} not found")
+            vendor = device.get('vendor')
+            device_type = device.get('type')
+            os = device.get('os')
+            specific_vendor_class = CLASS_MAP.get(vendor, {}).get(device_type, {}).get(os)
+            if specific_vendor_class:
+                base_device_args = {k: v for k, v in device.items()}
+                base_device_args.update({'connector': connector})
+                device_instance = specific_vendor_class(**base_device_args)
+                device_instance.set_credentials(credentials)
+                devs.append(device_instance)
+        if not devs:
+            raise ValueError(f"No devices found for IP {ip}")
         return devs

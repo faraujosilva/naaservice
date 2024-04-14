@@ -38,16 +38,21 @@ class CLI(Engine):
         self.driver = driver
         self.connector = connector
         self.parser = parser
+        self.credentials = {
+            "username": getenv("AUTOMATION_USER", self.request_param.username),
+            "password": getenv("AUTOMATION_PASS", self.request_param.password),
+            "community": getenv("AUTOMATION_COMMUNITY", self.request_param.community),
+        }
         self.__load_engine()
 
     def __load_engine(self):
         devices = []
         if isinstance(self.request_param.device_ip, list):
             for device_ip in self.request_param.device_ip:
-                device = self.device_factory.create_device(device_ip, self.db)
+                device = self.device_factory.create_device(device_ip, self.db, self.connector)
                 devices.extend(device)
         else:
-            device = self.device_factory.create_device(self.request_param.device_ip, self.db)
+            device = self.device_factory.create_device(self.request_param.device_ip, self.db, self.connector, self.credentials)
             devices.extend(device)
         self.devices = devices
         self.db = self.db
@@ -55,9 +60,7 @@ class CLI(Engine):
         self.devices = self.devices
         self.connector_factory = self.connector
         self.parser = self.parser    
-        self.create(self.request_param, self.db, self.drivers, self.devices, self.connector_factory, self.parser)
-    
-            
+        self.create(self.db, self.drivers, self.devices, self.connector_factory, self.parser)
         
 if __name__ == "__main__":
     load_dotenv()
@@ -93,6 +96,7 @@ if __name__ == "__main__":
     driver = DriverFactory(Drivers(**service['drivers']))
     connector = ConnectorFactory()
     req_param = RequestParam(device_ip=args.device_ip, output=args.output, output_filter=args.output_filter)
+
     cli = CLI(req_param, device_factory, db, driver, connector, Parser())
     
     output = cli.run()

@@ -19,11 +19,11 @@ class IDriver(ABC):
     def run(
         self,
         device: IDevice,
-        credentials: dict,
         connector: IConnector,
         connector_name: str,
     ):
         pass
 
+    @abstractmethod
     def get_commands(self, device: IDevice, connector_name: str) -> List[Command]:
         pass

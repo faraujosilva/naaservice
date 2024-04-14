@@ -60,6 +60,7 @@ class CommandStatus(BaseModel):
     command_name: str
     output: Any
     status: str
+    driver: str
 
 
 class DeviceOutput(BaseModel):
@@ -78,3 +79,4 @@ class DriverOrder(Enum):
     ssh = 2
     restconf = 4
     netconf = 5
+

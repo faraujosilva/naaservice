@@ -77,5 +77,5 @@ class DriverFactory(IDriver):
     def update_commands(self, commands: List[Command]):
         self.commands = commands
 
-    def run(self, device: IDevice, credentials: dict, connector: IConnector):
-        return connector.run(device, self.commands, credentials)
+    def run(self, device: IDevice, connector: IConnector):
+        return connector.run(device, self.commands)

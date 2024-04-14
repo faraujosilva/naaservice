@@ -1,7 +1,7 @@
 import os
 import json
+from os import getenv
 from flask import request, jsonify, current_app as app
-
 from src.engine.engine import Engine
 from src.database.mongodb import MongoDB
 from src.models.models import Drivers, RequestParam
@@ -29,12 +29,16 @@ def create_endpoint(blueprint, endpoint, method, data, file_name):
                 app.config["mongo_collection"],
                 app.config["mongosc"],
             )
-            device_factory = DeviceFactory()
-            device = device_factory.create_device(request.args.get("device_ip"), db)
             connector = ConnectorFactory()
+            device_factory = DeviceFactory()
+            credentials = {
+                "username": getenv("AUTOMATION_USER", request.args.get('username')),
+                "password": getenv("AUTOMATION_PASS", request.args.get('password')),
+                "community": getenv("AUTOMATION_COMMUNITY", request.args.get('community'))
+            }
+            device = device_factory.create_device(request.args.get("device_ip"), db, connector, credentials)
             engine = Engine()
-            engine = engine.create(
-                RequestParam(**request.args), db, driver, device, connector, Parser()
+            engine = engine.create(db, driver, device, connector, Parser()
             )
             # print(f"Engine loaded with {len(device)} devices")
             resp, code = engine.run()
