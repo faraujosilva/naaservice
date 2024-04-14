@@ -2,12 +2,32 @@ import unittest
 from unittest.mock import patch, MagicMock
 from datetime import timedelta
 from src.models.models import Command
-from src.device.interfaces import IDevice
+from src.device.base import BaseDevice
 from pysnmp.proto.rfc1902 import TimeTicks 
 from src.connector.conector_factory import ConnectorFactory
 from src.connector.netmiko_connector import NetmikoConnector, NetMikoAuthenticationException, NetMikoTimeoutException
+from src.models.m_errors import *
 from src.connector.snmp_connector import SNMPConnector
 from src.connector.rest_connector import RestConnector, ViptelaRestConnector
+
+class MockDeviceBase(BaseDevice):
+    def __init__(self, ip, name, type, port, vendor, os, driver=None):
+        super().__init__(ip, name, type, port, vendor, os, driver)
+
+    def get_ip(self):
+        return self.IP
+    
+    def get_driver(self):
+        return self.DRIVER
+    
+    def get_os(self):
+        return self.OS
+    
+    def get_vendor(self):
+        return self.VENDOR
+    
+    def get_type(self):
+        return self.TYPE
 
 class TestConnectorFactory(unittest.TestCase):
     
@@ -22,17 +42,28 @@ class TestConnectorFactory(unittest.TestCase):
             group=1,
             parse='mock',
         )
-        self.device = MagicMock(spec=IDevice)
-        self.device_ip = self.device.get_ip.return_value = '192.168.1.1'
-        self.credentials = {
-            "vmanage_ip": '1.2.3.4',
-            "j_username": 'user',
-            "j_password": 'pass',
-            "community": "public",
-            "username": "user",
-            "password": "pass",
-        }
-        
+        dev = {
+            'ip': '192.168.1.1',
+            'name': 'device',
+            'type': 'router',
+            'port': 22,
+            'vendor': 'cisco',
+            'os': 'ios',
+            'driver': 'ssh',
+            }
+        self.device = MockDeviceBase(**dev)
+        self.device.set_credentials(
+            {
+                "vmanage_ip": '1.2.3.4',
+                "j_username": 'user',
+                "j_password": 'pass',
+                "community": "public",
+                "username": "user",
+                "password": "pass",
+            }
+        )
+        self.device_ip = self.device.IP
+
     @patch('src.connector.conector_factory.ConnectorFactory.create_connector')
     def test_create_connector_w_mock(self, mock_create_connector):
         for connector_name, connector_class in  ConnectorFactory().connectors.items():
@@ -59,7 +90,7 @@ class TestConnectorFactory(unittest.TestCase):
         ])
         
         connector = SNMPConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(result.output, 'Test SNMP Response')
         
@@ -74,7 +105,7 @@ class TestConnectorFactory(unittest.TestCase):
         
         # Instanciando o conector e executando
         connector = SNMPConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         # Calculando a saída esperada
         ticks = int(time_ticks.prettyPrint())
@@ -88,13 +119,14 @@ class TestConnectorFactory(unittest.TestCase):
         self.assertEqual(result.output, expected_output)
         
     def test_snmp_connector_no_community(self):
-        credentials = {}
+
         connector = SNMPConnector()
-        
-        result = connector.run(self.device, self.geral_commandTest, credentials)
+        device = self.device
+        device.set_credentials({})
+        result = connector.run(device, self.geral_commandTest)
         self.assertEqual(
             result.error,
-            'Community string is required for SNMP'
+            SNMPErrors.COMMUNITY_ERROR.value
         )
         
     @patch('src.connector.snmp_connector.nextCmd')
@@ -105,7 +137,7 @@ class TestConnectorFactory(unittest.TestCase):
         
         connector = SNMPConnector()
         
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(
             result.error,
@@ -117,7 +149,7 @@ class TestConnectorFactory(unittest.TestCase):
         ])
         
         
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(
             result.error,
@@ -131,7 +163,7 @@ class TestConnectorFactory(unittest.TestCase):
         mock_session.return_value.get.return_value = MagicMock(content=b'{"mock": "value"}')
         
         connector = ViptelaRestConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(result.output, 'value')
         
@@ -142,7 +174,7 @@ class TestConnectorFactory(unittest.TestCase):
         
         connector = ViptelaRestConnector()
         
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(
             result.error,
@@ -161,7 +193,7 @@ class TestConnectorFactory(unittest.TestCase):
         mock_snmp_detect.return_value.autodetect.return_value = 'cisco_ios'
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(result.output, 'Test Netmiko Response')    
     
@@ -175,7 +207,7 @@ class TestConnectorFactory(unittest.TestCase):
         
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
         self.assertEqual(result.output, 'Test Netmiko Response')
     
@@ -188,26 +220,22 @@ class TestConnectorFactory(unittest.TestCase):
         mock_ssh_detect.return_value.autodetect.return_value = 'cisco_ios'
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
-        self.assertEqual(result.error, 'Could not detect device type neither by SNMP nor SSH')
+        self.assertEqual(result.error, NetmikoErrors.DETECTION_ERROR.value)
         
     @patch('src.connector.netmiko_connector.SNMPDetect', autospec=True)
     @patch('src.connector.netmiko_connector.SSHDetect', autospec=True)
     @patch('src.connector.netmiko_connector.ConnectHandler')
     def test_netmiko_connector_SSH_DETECT_exception(self, mock_connect_handler, mock_ssh_detect, mock_snmp_detect):
         mock_connect_handler.return_value.__enter__.return_value.send_command.return_value = 'Test Netmiko Response'
-        mock_snmp_detect.return_value.autodetect.return_value = None
+        mock_snmp_detect.return_value.autodetect.return_value = Exception('Test SNMP Detect Exception')
         mock_ssh_detect.return_value.autodetect.side_effect = Exception('Test SSH Detect Exception')
-        
-        credentials = {
-            'username': 'user',
-            'password': 'pass'
-        }
+        device = self.device
+        device.CREDENTIALS.pop('community')
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, credentials)
-        
-        self.assertEqual(result.error, 'Could not detect device type by SSH')
+        result = connector.run(self.device, self.geral_commandTest)
+        self.assertEqual(result.error, NetmikoErrors.SSH_DETECT_ERROR.value)
     
     
     @patch('src.connector.netmiko_connector.SSHDetect', autospec=True)
@@ -221,14 +249,14 @@ class TestConnectorFactory(unittest.TestCase):
         self.assertEqual(result, 'cisco_ios')
     
     def test_netmiko_connector_no_username_password(self):
-        credentials = {}
+        device = self.device
+        device.set_credentials({})
         connector = NetmikoConnector()
+        from src.device.base_errors import NoValidCredential
         
-        result = connector.run(self.device, self.geral_commandTest, credentials)
-        self.assertEqual(
-            result.error,
-            'Username and password are required'
-        )
+        with self.assertRaises(NoValidCredential):
+            connector.run(device, self.geral_commandTest)
+                
         
     @patch('src.connector.netmiko_connector.SNMPDetect', autospec=True)
     @patch('src.connector.netmiko_connector.ConnectHandler')
@@ -237,29 +265,29 @@ class TestConnectorFactory(unittest.TestCase):
         mock_connect_handler.side_effect = Exception('Test General Error')
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
-        self.assertEqual(result.error, 'General error in connecting to device')
+        self.assertEqual(result.error, NetmikoErrors.GENERAL_NETMIKO_ERROR.value)
         
     @patch('src.connector.netmiko_connector.SNMPDetect', autospec=True)
     @patch('src.connector.netmiko_connector.ConnectHandler')
     #test_3 exceptions by with connect
     def test_netmiko_connector_timeout_error(self, mock_connect_handler, mock_snmp_detect):
-        mock_connect_handler.side_effect = NetMikoAuthenticationException
+        mock_connect_handler.side_effect = NetMikoTimeoutException
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
-        self.assertEqual(result.error, 'Authentication error in connecting to device')
+        self.assertEqual(result.error, NetmikoErrors.TIMEOUT_ERROR.value)
         
     
     @patch('src.connector.netmiko_connector.SNMPDetect', autospec=True)
     @patch('src.connector.netmiko_connector.ConnectHandler')
     #test_3 exceptions by with connect
     def test_netmiko_connector_authentication_error(self, mock_connect_handler, mock_snmp_detect):
-        mock_connect_handler.side_effect = NetMikoTimeoutException
+        mock_connect_handler.side_effect = NetMikoAuthenticationException
         
         connector = NetmikoConnector()
-        result = connector.run(self.device, self.geral_commandTest, self.credentials)
+        result = connector.run(self.device, self.geral_commandTest)
         
-        self.assertEqual(result.error, 'Timeout in connecting to device')
+        self.assertEqual(result.error, NetmikoErrors.AUTH_ERROR.value)

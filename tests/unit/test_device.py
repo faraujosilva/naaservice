@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from src.database.mongodb import MongoDB
+from src.device.base_errors import NoValidCredential
 from ddt import ddt, data, unpack
-from src.device.interfaces import IDevice, IRouter, ISwitch
+from src.device.interface import IDevice, IRouter, ISwitch
 from src.connector.conector_factory import ConnectorFactory
 from src.device.device_factory import DeviceFactory
 
@@ -20,7 +21,7 @@ class TestDevice(unittest.TestCase):
     @patch('src.database.mongodb.MongoDB.get')
     @patch('src.database.mongodb.MongoClient')
     @unpack
-    def test_devices(self, ip: str, d_type: str, os: str, driver: str, port: int, expected1, expected2, mock_mongo_client, mock_mongo_get):
+    def test_devices_ok(self, ip: str, d_type: str, os: str, driver: str, port: int, expected1, expected2, mock_mongo_client, mock_mongo_get):
         # Arrange
         db_name = 'test_db'
         collection = 'test_collection'
@@ -36,7 +37,7 @@ class TestDevice(unittest.TestCase):
         connector = connector_factory.create_connector('netmiko')
         
         # Act
-        devices = device_factory.create_device(ip, mongodb, connector)
+        devices = device_factory.create_device(ip, mongodb, connector, {'username': 'user', 'password': 'pass', 'community': 'public'})
         
         # Assert
         self.assertEqual(len(devices), 1)  # Assuming that one device is expected to be created
@@ -50,3 +51,40 @@ class TestDevice(unittest.TestCase):
             
         self.assertEqual(devices[0].get_os(), os)
         self.assertEqual(devices[0].BASE, expected2)
+        
+    @data(
+        ('1.2.3.433', 'router', 'ios', 'ssh', 22, ValueError),
+        ('1.2.3.43', 'router', 'ios', 'ssh', 22, NoValidCredential)
+    )
+    @patch('src.database.mongodb.MongoDB.get')
+    @patch('src.database.mongodb.MongoClient')
+    @unpack
+    def test_devices_nok(self, ip: str, d_type: str, os: str, driver: str, port: int, expected1, mock_mongo_client, mock_mongo_get):
+        # Arrange
+        db_name = 'test_db'
+        collection = 'test_collection'
+        connection_string = 'test_connection_string'
+        expected_device_data = {'vendor': 'cisco', 'type': d_type, 'os': os, 'ip': ip, 'driver': driver, 'name': 'R1', 'port': port}
+        
+        mock_mongo_client.return_value = MagicMock()
+        mongodb = MongoDB(db_name, collection, connection_string)
+        mock_mongo_get.return_value = [expected_device_data]
+        
+        device_factory = DeviceFactory()
+        connector_factory = ConnectorFactory()
+        connector = connector_factory.create_connector('netmiko')
+        
+        # Act
+        devices = device_factory.create_device(ip, mongodb, connector, {'username': 'user', 'password': 'pass', 'community': 'public'})
+        # Assert
+        self.assertEqual(len(devices), 1)  # Assuming that one device is expected to be created
+        self.assertIsInstance(devices[0], IDevice)  # Assuming that the device should be an IRouter
+        mock_mongo_get.assert_called_with({'ip': ip})
+      
+      
+        if isinstance(expected1, ValueError):
+            with self.assertRaises(ValueError):
+                devices[0].get_ip()
+        elif isinstance(expected1, NoValidCredential):
+            with self.assertRaises(NoValidCredential):
+                devices[0].CREDENTIALS

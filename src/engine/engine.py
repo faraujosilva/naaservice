@@ -1,9 +1,10 @@
 import json
 from typing import List, Tuple
 from src.driver.interface import IDriver
-from src.device.interfaces import IDevice
+from src.connector.interface import IConnector
+from src.driver.interface import IDriver
+from src.device.interface import IDevice
 from src.models.models import (
-    RequestParam,
     ConnectorOutput,
     ResultOutput,
     DeviceOutput,
@@ -18,24 +19,20 @@ from os import getenv
 class Engine:
     def __init__(self):
         self.request_param = {}
-        self.db = None
-        self.drivers = None
-        self.devices = None
-        self.connector_factory = None
-        self.parser = None
+        self.db: IDatabase = None
+        self.drivers: IDriver= None
+        self.devices: IDevice = []
+        self.connector_factory: IConnector = None
+        self.parser: Parser = None
 
     def create(
         self,
-        request_param: RequestParam,
         db: IDatabase,
         drivers: IDriver,
         devices: List[IDevice],
         connector_factory: ConnectorFactory,
         parser: Parser,
     ) -> "Engine":
-        if not request_param:
-            raise ValueError("Request parameters are required")
-
         if not db:
             raise ValueError("Database is required")
 
@@ -51,7 +48,6 @@ class Engine:
         if not parser:
             raise ValueError("Parser is required")
 
-        setattr(self, "request_param", request_param)
         setattr(self, "db", db)
         setattr(self, "drivers", drivers)
         setattr(self, "devices", devices)
@@ -60,11 +56,6 @@ class Engine:
         return self
 
     def run(self) -> Tuple[dict, int]:
-        credentials = {
-            "username": getenv("AUTOMATION_USER", self.request_param.username),
-            "password": getenv("AUTOMATION_PASS", self.request_param.password),
-            "community": getenv("AUTOMATION_COMMUNITY", self.request_param.community),
-        }
         result_output = ResultOutput(device_data=[])
 
         driver_order = self.drivers.get_driver_order()
@@ -112,6 +103,7 @@ class Engine:
                                 command_name="No command run",
                                 output=str(e),
                                 status="error",
+                                driver=driver_name,
                             )
                         )
                         success = False
@@ -123,7 +115,6 @@ class Engine:
                             self.drivers.update_commands(os_command)
                             output: ConnectorOutput = self.drivers.run(
                                 device,
-                                credentials,
                                 self.connector_factory.create_connector(connector_name),
                             )
                             if output.error != "":
@@ -135,6 +126,7 @@ class Engine:
                                         command_name=os_command.command_name,
                                         output=output.error,
                                         status="error",
+                                        driver=driver_name,
                                     )
                                 )
                                 success = False
@@ -143,10 +135,6 @@ class Engine:
                                 # Check if for this IP have a stderr, if yes, remove because have a success command and check if driver was changed
                                 if len(device_output.stderr) > 0:
                                     device_output.stderr = []
-                                    device.set_driver(driver_name)
-                                    device_output.device_info.update(
-                                        {"driver": driver_name}
-                                    )
                                 parsed_output = self.parser.parse_output(
                                     output.output, os_command.parse, os_command.group
                                 )
@@ -155,6 +143,7 @@ class Engine:
                                         command_name=os_command.command_name,
                                         output=parsed_output,
                                         status="success",
+                                        driver=driver_name,
                                     )
                                 )
                                 success = True

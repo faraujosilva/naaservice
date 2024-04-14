@@ -1,5 +1,5 @@
 from typing import Union, List
-from src.device.interfaces import IRouter, ISwitch
+from src.device.interface import IRouter, ISwitch
 from src.database.interface import IDatabase
 from src.connector.interface import IConnector
 from src.device.cisco.ios import (
@@ -44,7 +44,7 @@ class DeviceFactory:
     Raises:
         ValueError: If no devices are found for the given IP.
     """
-    def create_device(self, ip: str, db: IDatabase, connector: IConnector) -> List[Union[IRouter, ISwitch]]:
+    def create_device(self, ip: str, db: IDatabase, connector: IConnector, credentials: dict) -> List[Union[IRouter, ISwitch]]:
         """ Create a list of device instances based on the database entries matching the given IP address."""
         _query = {"ip": ip} if ip is not None else {}
         db_devices = list(db.get(_query))
@@ -58,6 +58,7 @@ class DeviceFactory:
                 base_device_args = {k: v for k, v in device.items()}
                 base_device_args.update({'connector': connector})
                 device_instance = specific_vendor_class(**base_device_args)
+                device_instance.set_credentials(credentials)
                 devs.append(device_instance)
         if not devs:
             raise ValueError(f"No devices found for IP {ip}")

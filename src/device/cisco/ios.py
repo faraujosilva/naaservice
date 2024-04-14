@@ -1,4 +1,4 @@
-from src.device.interfaces import IRouter, ISwitch
+from src.device.interface import IRouter, ISwitch
 from src.device.base import BaseDevice
 from src.device.cisco.base import BaseCiscoDevice
 from src.connector.interface import IConnector

@@ -10,3 +10,4 @@ black
 pytest
 pytest-cov
 ddt
+ipaddress

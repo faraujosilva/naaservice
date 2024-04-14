@@ -1,5 +1,6 @@
 import logging
 from netmiko import ConnectHandler
+from src.models.m_errors import BaseErrors, NetmikoErrors
 from netmiko.snmp_autodetect import SNMPDetect
 from netmiko.ssh_autodetect import SSHDetect
 from netmiko.exceptions import (
@@ -7,7 +8,7 @@ from netmiko.exceptions import (
     NetMikoAuthenticationException,
     NetMikoTimeoutException,
 )
-from src.device.interfaces import IDevice
+from src.device.interface import IDevice
 from src.connector.interface import IConnector
 from src.models.models import Command, ConnectorOutput
 from src.utils.utils import netmiko_commandError
@@ -26,41 +27,43 @@ class NetmikoConnector(IConnector):
         try:
             best_match = ssh_detect.autodetect()
         except NetMikoTimeoutException:
-            return ConnectorOutput(error="Timeout in autodetecting device type")
+            return ConnectorOutput(error=NetmikoErrors.TIMEOUT_ERROR)
         except NetMikoAuthenticationException:
             return ConnectorOutput(
-                error="Authentication error in autodetecting device type"
+                error=BaseErrors.CREDENTIAL_ERROR
             )
         except Exception:
             return ConnectorOutput(
-                error="General error in autodetecting device type"
+                error=NetmikoErrors.GENERAL_NETMIKO_ERROR
             )
         return best_match
             
     def run(
-        self, device: IDevice, command_detail: Command, credentials: dict
+        self, device: IDevice, command_detail: Command
     ) -> ConnectorOutput:
         """ Implementation metdod for IConnector interface"""
-        if not credentials.get("username") or not credentials.get("password"):
-            return ConnectorOutput(error="Username and password are required")
+        try:
+            device.CREDENTIALS.get("username"), device.CREDENTIALS.get("password"), device.CREDENTIALS.get("community")
+        except Exception:
+            return ConnectorOutput(error=BaseErrors.CREDENTIAL_ERROR)
         net_device = {
             "device_type": "autodetect",  # or 'cisco_ios
             "host": device.get_ip(),
-            "username": credentials.get("username"),
-            "password": credentials.get("password"),
+            "username": device.CREDENTIALS.get("username"),
+            "password": device.CREDENTIALS.get("password"),
         }
 
         if GLOBAL_DRIVER_CACHING.get(device.get_ip()):
             ##print('Using cache')
             net_device["device_type"] = GLOBAL_DRIVER_CACHING[device.get_ip()]
         else:
-            if credentials.get("community"):
+            if device.CREDENTIALS.get("community"):
                 ##print('Discovering using SNMP')
                 try:
                     snmp_detect = SNMPDetect(
                         hostname=device.get_ip(),
                         snmp_version="v2c",
-                        community=credentials.get("community"),
+                        community=device.CREDENTIALS.get("community"),
                     )
                     best_match = snmp_detect.autodetect()
                     if best_match:
@@ -74,7 +77,7 @@ class NetmikoConnector(IConnector):
                             net_device["device_type"] = best_match
                             GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                     except Exception:
-                        return ConnectorOutput(error="Could not detect device type neither by SNMP nor SSH")
+                        return ConnectorOutput(error=NetmikoErrors.DETECTION_ERROR)
             else:
                 try:
                     detect_ssh = SSHDetect(**net_device)
@@ -83,7 +86,7 @@ class NetmikoConnector(IConnector):
                         net_device["device_type"] = best_match
                         GLOBAL_DRIVER_CACHING[device.get_ip()] = best_match
                 except Exception:
-                    return ConnectorOutput(error="Could not detect device type by SSH")
+                    return ConnectorOutput(error=NetmikoErrors.SSH_DETECT_ERROR)
         try:
             with ConnectHandler(**net_device) as net_connect:
                 # test if have exception connecthandler
@@ -93,12 +96,12 @@ class NetmikoConnector(IConnector):
                         error=f"Command: {command_detail.command} ran with error: {output}"
                     )
         except NetMikoTimeoutException:  # This is instance for paramiko errors
-            return ConnectorOutput(error="Timeout in connecting to device")
+            return ConnectorOutput(error=NetmikoErrors.TIMEOUT_ERROR)
         
         except NetMikoAuthenticationException: 
-            return ConnectorOutput(error="Authentication error in connecting to device")
+            return ConnectorOutput(error=NetmikoErrors.AUTH_ERROR)
 
         except Exception:
-            return ConnectorOutput(error="General error in connecting to device")
+            return ConnectorOutput(error=NetmikoErrors.GENERAL_NETMIKO_ERROR)
 
         return ConnectorOutput(output=output)
