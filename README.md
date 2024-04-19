@@ -20,6 +20,7 @@ Design
    * Integra com elementos externos para consumir informações dos elementos como IP, Nome, Vendor e etc como NetBox, CMDBs e outros.
    * Os drivers(SSH e etc) interagem com os connectors(implementações do SSH, como Netmiko etc) para alcançar os elementos.
    * Se o driver prioritário padrão não for definido, então uma ordem default será executada (consultar DriverOrder class), e isso também serve caso o driver prioritário falhe, a ordem de 'fallback' é respeitada.
+
 Architecture
 =================
 ![Logo](docs/imgs/architecture.png)
