@@ -4,12 +4,11 @@ from os import getenv
 from flask import request, jsonify, current_app as app
 from src.engine.engine import Engine
 from src.database.mongodb import MongoDB
-from src.models.models import Drivers, RequestParam
+from src.models.models import Drivers
 from src.engine.parser import Parser
 from src.connector.conector_factory import ConnectorFactory
 from src.device.device_factory import DeviceFactory
 from src.driver.driver_factory import DriverFactory
-
 
 def create_endpoint(blueprint, endpoint, method, data, file_name):
     unique_endpoint_name = (
@@ -61,3 +60,4 @@ def load_endpoints(blueprint, directory):
                         create_endpoint(
                             blueprint, endpoint, method, data, file.replace(".json", "")
                         )
+
